@@ -1,0 +1,11 @@
+<div>
+  <svg width="200" height="200" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="#ccc" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="96" y="96" width="320" height="320" rx="24" ry="24" stroke="#bbb" fill="#f9f9f9"/>
+        <path d="M160 160h192M160 224h192M160 288h192" />
+        <circle cx="256" cy="256" r="200" stroke="#eee" stroke-width="32" />
+        <line x1="160" y1="352" x2="352" y2="352" />
+    </g>
+    <text x="256" y="480" font-size="24" text-anchor="middle" fill="#888">No Data</text>
+</svg>
+</div>
