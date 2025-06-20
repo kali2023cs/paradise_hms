@@ -1,115 +1,58 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
-import CircularProgress from '@mui/material/CircularProgress';
-import styled from '@emotion/styled';
-import {
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Box,
-  Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Checkbox,
-  FormControlLabel,
-  IconButton,
-  Avatar,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
+import { useLocation, useNavigate } from 'react-router-dom';
+import { styled } from '@mui/material/styles';
+import { 
+  Paper, 
+  Button, 
+  Box, 
+  Typography, 
+  Dialog, 
+  DialogTitle,  
+  Divider, 
+  DialogContent, 
+  DialogContentText, 
   DialogActions,
-  Grid,
+  useTheme,
   useMediaQuery,
-  useTheme
+  Snackbar,
+  Fade,
+  Slide,
+  Grow
 } from '@mui/material';
-import { PhotoCamera, InsertDriveFile, Add, Delete } from '@mui/icons-material';
-import InputAdornment from '@mui/material/InputAdornment';
 import api from '../../../../utils/axios';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
 import { format, parseISO } from 'date-fns';
+import MuiAlert from '@mui/material/Alert';
+import UILoader from '../../../common/UILoader';
+import GuestInfoForm from './GuestInfoForm';
+import RoomDetailsForm from './RoomDetailsForm';
 
-const UILoader = styled.div`
-  width: 48px;
-  height: 48px;
-  margin: auto;
-  position: relative;
-
-  &:before {
-    content: '';
-    width: 48px;
-    height: 5px;
-    background: #999;
-    position: absolute;
-    top: 60px;
-    left: 0;
-    border-radius: 50%;
-    animation: shadow324 0.5s linear infinite;
-  }
-
-  &:after {
-    content: '';
-    width: 100%;
-    height: 100%;
-    background: rgb(61, 106, 255);
-    position: absolute;
-    top: 0;
-    left: 0;
-    border-radius: 4px;
-    animation: jump7456 0.5s linear infinite;
-  }
-
-  @keyframes jump7456 {
-    15% {
-      border-bottom-right-radius: 3px;
-    }
-    25% {
-      transform: translateY(9px) rotate(22.5deg);
-    }
-    50% {
-      transform: translateY(18px) scale(1, 0.9) rotate(45deg);
-      border-bottom-right-radius: 40px;
-    }
-    75% {
-      transform: translateY(9px) rotate(67.5deg);
-    }
-    100% {
-      transform: translateY(0) rotate(90deg);
-    }
-  }
-
-  @keyframes shadow324 {
-    0%, 100% {
-      transform: scale(1, 1);
-    }
-    50% {
-      transform: scale(1.2, 1);
-    }
-  }
-`;
-
-// Corrected Alert component
+// Enhanced Alert component with animations
 const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+  return (
+    <Grow in={true} timeout={300}>
+      <MuiAlert 
+        elevation={6} 
+        ref={ref} 
+        variant="filled" 
+        {...props} 
+        sx={{
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          '& .MuiAlert-icon': {
+            fontSize: '1.5rem'
+          },
+          '&.MuiAlert-filledSuccess': {
+            backgroundColor: '#4caf50', // Custom green color
+          }
+        }}
+      />
+    </Grow>
+  );
 });
-Alert.displayName = 'Alert';
 
 const MemoizedAlert = React.memo(Alert);
 
-// Optimized custom hook for Snackbar
+// Optimized custom hook for Snackbar with transitions
 const useSnackbar = () => {
   const [snackbarState, setSnackbarState] = useState({
     open: false,
@@ -121,7 +64,8 @@ const useSnackbar = () => {
     setSnackbarState({
       open: true,
       message,
-      severity: options.variant || 'info'
+      severity: options.variant || 'info',
+      key: new Date().getTime() // Add key to force re-render for consecutive messages
     });
   }, []);
 
@@ -133,8 +77,25 @@ const useSnackbar = () => {
   return {
     showSnackbar,
     snackbar: (
-      <Snackbar open={snackbarState.open} autoHideDuration={6000} onClose={handleClose}>
-        <MemoizedAlert onClose={handleClose} severity={snackbarState.severity} sx={{ width: '100%' }}>
+      <Snackbar 
+        open={snackbarState.open} 
+        autoHideDuration={6000} 
+        onClose={handleClose}
+        TransitionComponent={Slide}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        key={snackbarState.key}
+      >
+        <MemoizedAlert 
+          onClose={handleClose} 
+          severity={snackbarState.severity} 
+          sx={{ 
+            width: '100%',
+            minWidth: '300px',
+            '& .MuiAlert-message': {
+              fontSize: '0.95rem'
+            }
+          }}
+        >
           {snackbarState.message}
         </MemoizedAlert>
       </Snackbar>
@@ -142,6 +103,7 @@ const useSnackbar = () => {
   };
 };
 
+// Initial data structures
 const initialFormData = {
   is_reservation: false,
   reservation_number: '',
@@ -206,8 +168,54 @@ const initialRoomDetail = {
   maxExtraPax: 0
 };
 
+// Styled components for better UI
+const FormContainer = styled(Paper)(({ theme }) => ({
+  width: '95%',
+  maxWidth: '1400px',
+  margin: '2rem auto',
+  padding: theme.spacing(4),
+  backgroundColor: '#ffffff',
+  borderRadius: '12px',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+  transition: 'all 0.3s ease-in-out',
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2),
+    width: '100%',
+    margin: '1rem auto',
+    borderRadius: '8px'
+  }
+}));
+
+const FormTitle = styled(Typography)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontWeight: 700,
+  marginBottom: theme.spacing(2),
+  fontSize: '1.75rem',
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.5rem'
+  }
+}));
+
+const SubmitButton = styled(Button)(({ theme }) => ({
+  padding: theme.spacing(1.5, 4),
+  fontWeight: 600,
+  fontSize: '1rem',
+  borderRadius: '8px',
+  boxShadow: 'none',
+  transition: 'all 0.2s ease-in-out',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: '100%',
+    padding: theme.spacing(1.5, 2)
+  }
+}));
+
 const CheckInForm = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { state } = location;
   const isEditMode = state?.isEditMode || false;
   const checkinId = state?.checkinId || null;
@@ -217,7 +225,6 @@ const CheckInForm = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { showSnackbar, snackbar } = useSnackbar();
 
-  // State for dropdown options
   const [dropdowns, setDropdowns] = useState({
     arrivalModes: [],
     titles: [],
@@ -227,7 +234,6 @@ const CheckInForm = () => {
     businessSources: []
   });
 
-  // Form state
   const [formData, setFormData] = useState(initialFormData);
   const [roomDetails, setRoomDetails] = useState([{ ...initialRoomDetail }]);
   const [openAlert, setOpenAlert] = useState(false);
@@ -235,14 +241,11 @@ const CheckInForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
-
-  // Cache for rooms and plans by type
   const [cache, setCache] = useState({
     roomsByType: {},
     plansByType: {}
   });
 
-  // Initialize room details with pre-selected room if available
   const initialRoomDetailWithPreselect = useMemo(() => {
     const detail = { ...initialRoomDetail };
     
@@ -260,7 +263,6 @@ const CheckInForm = () => {
     setRoomDetails([initialRoomDetailWithPreselect]);
   }, [initialRoomDetailWithPreselect]);
 
-  // Memoized fetch function for dropdowns
   const fetchDropdowns = useCallback(async () => {
     try {
       const responses = await Promise.all([
@@ -286,14 +288,12 @@ const CheckInForm = () => {
     }
   }, [showSnackbar]);
 
-  // Fetch check-in data if in edit mode
   const fetchCheckInData = useCallback(async () => {
     try {
       const response = await api.get(`/checkin/${checkinId}`);
       if (response.data.success) {
         const { guestInfo, roomDetails = [] } = response.data.data;
         
-        // Format dates
         const formattedGuestInfo = {
           ...guestInfo,
           check_in_datetime: parseISO(guestInfo.check_in_datetime),
@@ -302,7 +302,6 @@ const CheckInForm = () => {
 
         setFormData(formattedGuestInfo);
         
-        // Transform room details
         const transformedRoomDetails = roomDetails.map(room => ({
           roomType: '',
           roomTypeId: room.room_type_id,
@@ -332,7 +331,6 @@ const CheckInForm = () => {
     }
   }, [checkinId, showSnackbar]);
 
-  // Memoized fetch functions for rooms and plans
   const fetchRoomsForType = useCallback(async (roomTypeId) => {
     if (!roomTypeId || cache.roomsByType[roomTypeId]) return;
 
@@ -373,28 +371,23 @@ const CheckInForm = () => {
     }
   }, [cache.plansByType, showSnackbar]);
 
-  // Initialize component
   useEffect(() => {
     const initializeForm = async () => {
       setIsLoading(true);
       
       try {
-        // First load all dropdowns
         await fetchDropdowns();
         
-        // If in edit mode, load the check-in data
         if (isEditMode && checkinId) {
           await fetchCheckInData();
         }
         
-        // If there's a pre-selected room, load its data
         if (preSelectedRoom?.roomTypeId) {
           await Promise.all([
             fetchRoomsForType(preSelectedRoom.roomTypeId),
             fetchPlansForType(preSelectedRoom.roomTypeId)
           ]);
           
-          // If room number is also pre-selected, set the room details
           if (preSelectedRoom.roomNo) {
             setRoomDetails(prev => {
               const updated = [...prev];
@@ -440,19 +433,17 @@ const CheckInForm = () => {
     showSnackbar
   ]);
 
-  // Optimized handlers
-  const handleInputChange = useCallback((e) => {
-    const { name, value, type, checked } = e.target;
+  const handleInputChange = useCallback((field, value) => {
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [field]: value
     }));
   }, []);
 
-  const handleDateChange = useCallback((name, value) => {
+  const handleDateChange = useCallback((field, value) => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
   }, []);
 
@@ -546,7 +537,6 @@ const CheckInForm = () => {
       const updated = [...prev];
       const room = updated[index];
 
-      // Validate against max values
       if (field === 'male' || field === 'female') {
         const totalAdults = field === 'male'
           ? numValue + room.female
@@ -577,7 +567,6 @@ const CheckInForm = () => {
     const selectedPlan = plans.find(plan => plan.plan_name === value);
     if (!selectedPlan) return;
 
-    // Generate meal plan based on complimentary services
     const services = [];
     if (selectedPlan.complimentary_breakfast) services.push('BR');
     if (selectedPlan.complimentary_lunch) services.push('L');
@@ -626,9 +615,7 @@ const CheckInForm = () => {
         total = Math.max(0, netRate - discountAmount);
       } else if (room.discType === 'Percentage') {
         const discountPercentage = parseFloat(value) || 0;
-        // Calculate the discount amount by applying percentage to net rate
         const discountAmount = (netRate * discountPercentage) / 100;
-        // Subtract the discount amount from the net rate
         total = Math.max(0, netRate - discountAmount);
       }
 
@@ -755,12 +742,20 @@ const CheckInForm = () => {
           { variant: 'success' }
         );
         
+        // Navigate after a short delay to allow the snackbar to be seen
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+        
         if (!isEditMode) {
           setFormData(initialFormData);
           setRoomDetails([{ ...initialRoomDetail }]);
         }
       } else {
-        showSnackbar(response.data.message || 'Operation failed', { variant: 'error' });
+        showSnackbar(response.data.message || 'Operation failed', { variant: 'success' });
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
       }
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -768,961 +763,139 @@ const CheckInForm = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [prepareSubmitData, showSnackbar, validateForm, isEditMode, checkinId]);
+  }, [prepareSubmitData, showSnackbar, validateForm, isEditMode, checkinId, navigate]);
 
   if (isLoading || !isInitialLoadComplete) {
-  return (
-    <Box sx={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh' 
-    }}>
-      <UILoader />
-    </Box>
-  );
-}
-
-  return (
-    <Paper sx={{
-      width: '100%',
-      p: isMobile ? 2 : 3,
-      bgcolor: '#f5f5f5',
-      borderRadius: 2,
-      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    }}>
-
-      {/* The rest of your existing form content */}
-      <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: '#2e7d32' }}>
-        Quick Check-In
-      </Typography>
-
-      <Divider sx={{ mb: 3 }} />
-
-      <Box component="form" onSubmit={handleSubmit}>
-        {/* Guest Information Section */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-          {/* First Row */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    color="primary"
-                    checked={formData.is_reservation}
-                    onChange={(e) => setFormData(prev => ({ ...prev, is_reservation: e.target.checked }))}
-                  />
-                }
-                label="Is Reservation"
-              />
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <TextField
-                label="Reservation Number"
-                fullWidth
-                size="small"
-                variant="outlined"
-                disabled={!formData.is_reservation}
-                value={formData.reservation_number}
-                onChange={(e) => setFormData(prev => ({ ...prev, reservation_number: e.target.value }))}
-              />
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="arrival-mode-label">Arrival Mode *</InputLabel>
-                <Select
-                  labelId="arrival-mode-label"
-                  value={formData.arrival_mode}
-                  onChange={(e) => setFormData(prev => ({ ...prev, arrival_mode: e.target.value }))}
-                  label="Arrival Mode"
-                >
-                  <MenuItem value=""><em>None</em></MenuItem>
-                  {dropdowns.arrivalModes.map((mode) => (
-                    <MenuItem key={mode.id} value={mode.id}>{mode.mode_name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <TextField
-                label="OTA"
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={formData.ota}
-                onChange={(e) => setFormData(prev => ({ ...prev, ota: e.target.value }))}
-              />
-            </Box>
-          </Box>
-
-          {/* Second Row */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <TextField
-                label="Booking ID"
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={formData.booking_id}
-                onChange={(e) => setFormData(prev => ({ ...prev, booking_id: e.target.value }))}
-              />
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <TextField
-                label="Contact No. *"
-                fullWidth
-                size="small"
-                variant="outlined"
-                required
-                value={formData.contact}
-                onChange={(e) => setFormData(prev => ({ ...prev, contact: e.target.value }))}
-              />
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="title-label">Title *</InputLabel>
-                <Select
-                  labelId="title-label"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  label="Title"
-                  required
-                >
-                  <MenuItem value=""><em>None</em></MenuItem>
-                  {dropdowns.titles.map((title) => (
-                    <MenuItem key={title.id} value={title.id}>{title.title_name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <TextField
-                label="First Name *"
-                fullWidth
-                size="small"
-                variant="outlined"
-                required
-                value={formData.first_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-              />
-            </Box>
-          </Box>
-
-          {/* Third Row */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <TextField
-                label="Last Name"
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={formData.last_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-              />
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="gender-label">Gender</InputLabel>
-                <Select
-                  labelId="gender-label"
-                  value={formData.gender}
-                  onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-                  label="Gender"
-                >
-                  <MenuItem value=""><em>None</em></MenuItem>
-                  {dropdowns.genders.map((gender) => (
-                    <MenuItem key={gender.id} value={gender.id}>{gender.gender_name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <TextField
-                label="City"
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={formData.city}
-                onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-              />
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <TextField
-                label="ID No. (Aadhaar, Other)"
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={formData.id_number}
-                onChange={(e) => setFormData(prev => ({ ...prev, id_number: e.target.value }))}
-              />
-            </Box>
-          </Box>
-
-          {/* Fourth Row */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <TextField
-                label="Email"
-                fullWidth
-                size="small"
-                variant="outlined"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              />
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="checkin-mode-label">Check-In Mode</InputLabel>
-                <Select
-                  labelId="checkin-mode-label"
-                  value={formData.check_in_mode}
-                  onChange={(e) => setFormData(prev => ({ ...prev, check_in_mode: e.target.value }))}
-                  label="Check-In Mode"
-                >
-                  <MenuItem value="Day">Day</MenuItem>
-                  <MenuItem value="Night">Night</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="allow-credit-label">Allow Credit</InputLabel>
-                <Select
-                  labelId="allow-credit-label"
-                  value={formData.allow_credit}
-                  onChange={(e) => setFormData(prev => ({ ...prev, allow_credit: e.target.value }))}
-                  label="Allow Credit"
-                >
-                  <MenuItem value="Yes">Yes</MenuItem>
-                  <MenuItem value="No">No</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="foreign-guest-label">Foreign Guest</InputLabel>
-                <Select
-                  labelId="foreign-guest-label"
-                  value={formData.foreign_guest}
-                  onChange={(e) => setFormData(prev => ({ ...prev, foreign_guest: e.target.value }))}
-                  label="Foreign Guest"
-                >
-                  <MenuItem value="Yes">Yes</MenuItem>
-                  <MenuItem value="No">No</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
-
-          {/* Fifth Row */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="segment-label">Segment Name</InputLabel>
-                <Select
-                  labelId="segment-label"
-                  value={formData.segment_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, segment_id: e.target.value }))}
-                  label="Segment Name"
-                >
-                  <MenuItem value=""><em>None</em></MenuItem>
-                  {dropdowns.segments.map(segment => (
-                    <MenuItem key={segment.id} value={segment.id}>{segment.segment_name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="business-source-label">Business Source</InputLabel>
-                <Select
-                  labelId="business-source-label"
-                  value={formData.business_source_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, business_source_id: e.target.value }))}
-                  label="Business Source"
-                >
-                  <MenuItem value=""><em>None</em></MenuItem>
-                  {dropdowns.businessSources.map(source => (
-                    <MenuItem key={source.id} value={source.id}>{source.source_name}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <Box display="flex" alignItems="center" gap={2}>
-                <input
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  id="photo-upload"
-                  type="file"
-                  onChange={(e) => handleFileUpload('photo', e.target.files[0])}
-                />
-                <label htmlFor="photo-upload">
-                  <IconButton color="primary" component="span" size="small">
-                    <PhotoCamera fontSize="small" />
-                  </IconButton>
-                </label>
-                <Typography variant="body2">Upload Photo</Typography>
-                <Avatar
-                  variant="square"
-                  sx={{ width: 40, height: 40, bgcolor: 'grey.200' }}
-                  src={formData.photo}
-                />
-              </Box>
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }}>
-              <Box display="flex" alignItems="center" gap={2}>
-                <input
-                  accept=".pdf,.doc,.docx,.jpg,.png"
-                  style={{ display: 'none' }}
-                  id="document-upload"
-                  type="file"
-                  onChange={(e) => handleFileUpload('document', e.target.files[0])}
-                />
-                <label htmlFor="document-upload">
-                  <IconButton color="primary" component="span" size="small">
-                    <InsertDriveFile fontSize="small" />
-                  </IconButton>
-                </label>
-                <Typography variant="body2">Upload Document</Typography>
-                <Avatar
-                  variant="square"
-                  sx={{ width: 40, height: 40, bgcolor: 'grey.200' }}
-                  src={formData.document}
-                />
-              </Box>
-            </Box>
-          </Box>
-        </Box>
-
-        <Divider sx={{ my: 3 }} />
-
-        {/* Room Details Section */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="subtitle1" fontWeight="bold">Room Details</Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Add />}
-            onClick={addRoomRow}
-            size="small"
-            sx={{
-              textTransform: 'none',
-              borderRadius: 1,
-              boxShadow: 'none',
-              '&:hover': {
-                boxShadow: 'none',
-                bgcolor: '#1b5e20'
-              }
-            }}
-          >
-            Add Room
-          </Button>
-        </Box>
-
-        <TableContainer component={Paper} sx={{ mb: 3, maxWidth: '100%', overflowX: 'auto' }}>
-          <Table size="small" sx={{ '& .MuiTableCell-root': { fontSize: '0.75rem', py: 0.5, px: 1 } }}>
-            <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableRow>
-                <TableCell sx={{ minWidth: '120px' }}>Room Type *</TableCell>
-                <TableCell sx={{ minWidth: '80px' }}>Room No. *</TableCell>
-                <TableCell sx={{ minWidth: '100px' }}>Rate Plan *</TableCell>
-                <TableCell sx={{ minWidth: '80px' }}>Meal Plan</TableCell>
-                <TableCell sx={{ minWidth: '120px' }}>Guest Name *</TableCell>
-                <TableCell sx={{ minWidth: '100px' }}>Contact</TableCell>
-                <TableCell sx={{ minWidth: '60px' }}>Male</TableCell>
-                <TableCell sx={{ minWidth: '60px' }}>Female</TableCell>
-                <TableCell sx={{ minWidth: '60px' }}>Extra</TableCell>
-                <TableCell sx={{ minWidth: '80px' }}>Net Rate</TableCell>
-                <TableCell sx={{ minWidth: '100px' }}>Disc. Type</TableCell>
-                <TableCell sx={{ minWidth: '80px' }}>Disc. Val</TableCell>
-                <TableCell sx={{ minWidth: '80px' }}>Total</TableCell>
-                <TableCell sx={{ minWidth: '40px' }}>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {roomDetails.map((row, index) => (
-                <TableRow key={index}>
-                  {/* Room Type */}
-                  <TableCell>
-                    <FormControl fullWidth size="small" sx={{ minWidth: '120px', '& .MuiInputBase-root': { fontSize: '0.75rem', py: 0.5 } }}>
-                      <Select
-                        value={row.roomType}
-                        onChange={(e) => handleRoomTypeChange(index, e.target.value)}
-                        displayEmpty
-                        required
-                      >
-                        <MenuItem value="" sx={{ fontSize: '0.75rem' }}>
-                          <em>Select Room Type</em>
-                        </MenuItem>
-                        {dropdowns.roomTypes.map((type) => (
-                          <MenuItem key={type.id} value={type.room_type_name} sx={{ fontSize: '0.75rem' }}>
-                            {type.room_type_name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </TableCell>
-
-                  {/* Room No */}
-                  <TableCell>
-                    <FormControl fullWidth size="small" sx={{ minWidth: '80px', '& .MuiInputBase-root': { fontSize: '0.75rem', py: 0.5 } }}>
-                      <Select
-                        value={row.roomNo}
-                        onChange={(e) => handleRoomNoChange(index, e.target.value)}
-                        displayEmpty
-                        required
-                        disabled={!row.roomTypeId}
-                      >
-                        <MenuItem value="" sx={{ fontSize: '0.75rem' }}>
-                          <em>Select Room</em>
-                        </MenuItem>
-                        {getAvailableRoomsForRow(index).map((room) => (
-                          <MenuItem key={room.id} value={room.room_no} sx={{ fontSize: '0.75rem' }}>
-                            {room.room_no}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </TableCell>
-
-                  {/* Rate Plan */}
-                  <TableCell>
-                    <FormControl fullWidth size="small" sx={{ minWidth: '100px', '& .MuiInputBase-root': { fontSize: '0.75rem', py: 0.5 } }}>
-                      <Select
-                        value={row.ratePlan}
-                        onChange={(e) => handleRatePlanChange(index, e.target.value)}
-                        displayEmpty
-                        required
-                        disabled={!row.roomTypeId}
-                      >
-                        <MenuItem value="" sx={{ fontSize: '0.75rem' }}>
-                          <em>Select Plan</em>
-                        </MenuItem>
-                        {row.roomTypeId && cache.plansByType[row.roomTypeId]?.map((plan) => (
-                          <MenuItem key={plan.id} value={plan.plan_name} sx={{ fontSize: '0.75rem' }}>
-                            {plan.plan_name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </TableCell>
-
-                  {/* Meal Plan */}
-                  <TableCell>
-                    <TextField
-                      value={row.mealPlan}
-                      size="small"
-                      fullWidth
-                      InputProps={{
-                        readOnly: true,
-                        sx: { fontSize: '0.75rem', py: 0.5 }
-                      }}
-                      sx={{ '& .MuiInputBase-root': { minWidth: '80px' } }}
-                    />
-                  </TableCell>
-
-                  {/* Guest Name */}
-                  <TableCell>
-                    <TextField
-                      value={row.guestName}
-                      onChange={(e) => {
-                        const updated = [...roomDetails];
-                        updated[index].guestName = e.target.value;
-                        setRoomDetails(updated);
-                      }}
-                      size="small"
-                      fullWidth
-                      InputProps={{ sx: { fontSize: '0.75rem', py: 0.5 } }}
-                      sx={{ '& .MuiInputBase-root': { minWidth: '120px' } }}
-                    />
-                  </TableCell>
-
-                  {/* Contact */}
-                  <TableCell>
-                    <TextField
-                      value={row.contact}
-                      onChange={(e) => {
-                        const updated = [...roomDetails];
-                        updated[index].contact = e.target.value;
-                        setRoomDetails(updated);
-                      }}
-                      size="small"
-                      fullWidth
-                      InputProps={{ sx: { fontSize: '0.75rem', py: 0.5 } }}
-                      sx={{ '& .MuiInputBase-root': { minWidth: '100px' } }}
-                    />
-                  </TableCell>
-
-                  {/* Male */}
-                  <TableCell>
-                    <TextField
-                      type="number"
-                      value={row.male}
-                      onChange={(e) => handlePaxChange(index, 'male', e.target.value)}
-                      size="small"
-                      inputProps={{ min: 0, max: row.maxPax }}
-                      fullWidth
-                      InputProps={{ sx: { fontSize: '0.75rem', py: 0.5 } }}
-                      sx={{ '& .MuiInputBase-root': { minWidth: '60px' } }}
-                    />
-                  </TableCell>
-
-                  {/* Female */}
-                  <TableCell>
-                    <TextField
-                      type="number"
-                      value={row.female}
-                      onChange={(e) => handlePaxChange(index, 'female', e.target.value)}
-                      size="small"
-                      inputProps={{ min: 0, max: row.maxPax }}
-                      fullWidth
-                      InputProps={{ sx: { fontSize: '0.75rem', py: 0.5 } }}
-                      sx={{ '& .MuiInputBase-root': { minWidth: '60px' } }}
-                    />
-                  </TableCell>
-
-                  {/* Extra */}
-                  <TableCell>
-                    <TextField
-                      type="number"
-                      value={row.extra}
-                      onChange={(e) => handlePaxChange(index, 'extra', e.target.value)}
-                      size="small"
-                      inputProps={{ min: 0, max: row.maxExtraPax }}
-                      fullWidth
-                      InputProps={{ sx: { fontSize: '0.75rem', py: 0.5 } }}
-                      sx={{ '& .MuiInputBase-root': { minWidth: '60px' } }}
-                    />
-                  </TableCell>
-
-                  {/* Net Rate */}
-                  <TableCell>
-                    <TextField
-                      value={row.netRate}
-                      size="small"
-                      fullWidth
-                      InputProps={{
-                        readOnly: true,
-                        sx: { fontSize: '0.75rem', py: 0.5 }
-                      }}
-                      sx={{ '& .MuiInputBase-root': { minWidth: '80px' } }}
-                    />
-                  </TableCell>
-
-                  {/* Disc. Type */}
-                  <TableCell>
-                    <FormControl fullWidth size="small" sx={{ minWidth: '100px', '& .MuiInputBase-root': { fontSize: '0.75rem', py: 0.5 } }}>
-                      <Select
-                        value={row.discType}
-                        onChange={(e) => handleDiscTypeChange(index, e.target.value)}
-                        disabled={!row.netRate}
-                      >
-                        <MenuItem value="No Disc" sx={{ fontSize: '0.75rem' }}>No Disc</MenuItem>
-                        <MenuItem value="Amount" sx={{ fontSize: '0.75rem' }}>Amount</MenuItem>
-                        <MenuItem value="Percentage" sx={{ fontSize: '0.75rem' }}>Percentage</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </TableCell>
-
-                  {/* Disc. Val */}
-                  <TableCell>
-                    <TextField
-                      value={row.discVal}
-                      onChange={(e) => handleDiscValChange(index, e.target.value)}
-                      size="small"
-                      fullWidth
-                      disabled={row.discType === 'No Disc' || !row.netRate}
-                      InputProps={{
-                        sx: { fontSize: '0.75rem', py: 0.5 },
-                        endAdornment: row.discType === 'Percentage' ? '%' : null
-                      }}
-                      sx={{ '& .MuiInputBase-root': { minWidth: '80px' } }}
-                    />
-                  </TableCell>
-
-                  {/* Total */}
-                  <TableCell>
-                    <TextField
-                      value={row.total}
-                      size="small"
-                      fullWidth
-                      InputProps={{
-                        readOnly: true,
-                        sx: { fontSize: '0.75rem', py: 0.5 }
-                      }}
-                      sx={{ '& .MuiInputBase-root': { minWidth: '80px' } }}
-                    />
-                  </TableCell>
-
-                  {/* Delete Action */}
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => removeRoomRow(index)}
-                      disabled={roomDetails.length <= 1}
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        <Divider sx={{ my: 3 }} />
-
-        {/* Check-in Details Section */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            Check-in Details
-          </Typography>
-
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 2 }}>
-              <Box sx={{ flex: '1 1 200px' }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel id="checkin-type-label">Check-in Type</InputLabel>
-                  <Select
-                    labelId="checkin-type-label"
-                    value={formData.check_in_type}
-                    onChange={(e) => setFormData(prev => ({ ...prev, check_in_type: e.target.value }))}
-                    label="Check-in Type"
-                  >
-                    <MenuItem value="24 Hours CheckIn">24 Hours CheckIn</MenuItem>
-                    <MenuItem value="Day Use">Day Use</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-
-              <Box sx={{ flex: '1 1 200px' }}>
-                <DateTimePicker
-                  label="Check-in Date & Time"
-                  value={formData.check_in_datetime}
-                  onChange={(newValue) => handleDateChange('check_in_datetime', newValue)}
-                  format="dd-MM-yyyy HH:mm"
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                      variant: 'outlined'
-                    }
-                  }}
-                />
-              </Box>
-
-              <Box sx={{ flex: '1 1 150px' }}>
-                <TextField
-                  label="No.of Days"
-                  fullWidth
-                  size="small"
-                  variant="outlined"
-                  type="number"
-                  value={formData.number_of_days}
-                  onChange={handleNumberOfDaysChange}
-                />
-              </Box>
-
-              <Box sx={{ flex: '1 1 200px' }}>
-                <DateTimePicker
-                  label="Check-out Date & Time"
-                  value={formData.check_out_datetime}
-                  onChange={(newValue) => handleDateChange('check_out_datetime', newValue)}
-                  format="dd-MM-yyyy HH:mm"
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                      variant: 'outlined'
-                    }
-                  }}
-                />
-              </Box>
-            </Box>
-
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-              <Box sx={{ flex: '1 1 200px' }}>
-                <TextField
-                  label="Check-out Grace Time (hours)"
-                  type="number"
-                  value={formData.grace_hours}
-                  onChange={(e) => setFormData(prev => ({ ...prev, grace_hours: Number(e.target.value) }))}
-                  inputProps={{ min: 0, max: 24, step: 1 }}
-                  fullWidth
-                  size="small"
-                  variant="outlined"
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">hours</InputAdornment>,
-                  }}
-                />
-              </Box>
-
-              <Box sx={{ flex: '1 1 200px' }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel id="payment-by-label">Payment By</InputLabel>
-                  <Select
-                    labelId="payment-by-label"
-                    value={formData.payment_by}
-                    onChange={(e) => setFormData(prev => ({ ...prev, payment_by: e.target.value }))}
-                    label="Payment By"
-                  >
-                    <MenuItem value="Direct">Direct</MenuItem>
-                    <MenuItem value="Company">Company</MenuItem>
-                    <MenuItem value="OTA">OTA</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-
-              <Box sx={{ flex: '1 1 200px', display: 'flex', alignItems: 'center', gap: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      color="primary"
-                      checked={formData.allow_charges_posting}
-                      onChange={(e) => setFormData(prev => ({ ...prev, allow_charges_posting: e.target.checked }))}
-                    />
-                  }
-                  label="Allow Charges Posting"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      color="primary"
-                      checked={formData.enable_paxwise}
-                      onChange={(e) => setFormData(prev => ({ ...prev, enable_paxwise: e.target.checked }))}
-                    />
-                  }
-                  label="Enable Paxwise"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      color="primary"
-                      checked={formData.enable_room_sharing}
-                      onChange={(e) => setFormData(prev => ({ ...prev, enable_room_sharing: e.target.checked }))}
-                    />
-                  }
-                  label="Enable Room Sharing"
-                />
-              </Box>
-            </Box>
-          </LocalizationProvider>
-        </Box>
-
-        {/* Address Details Section */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            Address Details
-          </Typography>
-
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 2 }}>
-            <Box sx={{ flex: '1 1 200px' }}>
-              <TextField
-                label="GST Number"
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={formData.gst_number}
-                onChange={(e) => setFormData(prev => ({ ...prev, gst_number: e.target.value }))}
-              />
-            </Box>
-
-            <Box sx={{ flex: '1 1 200px' }}>
-              <TextField
-                label="Guest Company"
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={formData.guest_company}
-                onChange={(e) => setFormData(prev => ({ ...prev, guest_company: e.target.value }))}
-              />
-            </Box>
-
-            <Box sx={{ flex: '1 1 150px' }}>
-              <TextField
-                label="Age"
-                fullWidth
-                size="small"
-                variant="outlined"
-                type="number"
-                value={formData.age}
-                onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value }))}
-              />
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 2 }}>
-            <Box sx={{ flex: '1 1 200px' }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="gst-type-label">GST Type</InputLabel>
-                <Select
-                  labelId="gst-type-label"
-                  value={formData.gst_type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, gst_type: e.target.value }))}
-                  label="GST Type"
-                >
-                  <MenuItem value="UNREGISTERED">UNREGISTERED</MenuItem>
-                  <MenuItem value="REGISTERED">REGISTERED</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Box sx={{ flex: '1 1 200px' }}>
-              <TextField
-                label="Address"
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={formData.address}
-                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-              />
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 2 }}>
-            <Box sx={{ flex: '1 1 300px' }}>
-              <TextField
-                label="Visit Remark"
-                fullWidth
-                size="small"
-                variant="outlined"
-                multiline
-                rows={2}
-                value={formData.visit_remark}
-                onChange={(e) => setFormData(prev => ({ ...prev, visit_remark: e.target.value }))}
-              />
-            </Box>
-
-            <Box sx={{ flex: '1 1 200px' }}>
-              <TextField
-                label="City"
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={formData.city}
-                onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-              />
-            </Box>
-
-            <Box sx={{ flex: '1 1 150px' }}>
-              <TextField
-                label="Pin Code"
-                fullWidth
-                size="small"
-                variant="outlined"
-                type="number"
-                value={formData.pin_code}
-                onChange={(e) => setFormData(prev => ({ ...prev, pin_code: e.target.value }))}
-              />
-            </Box>
-
-            <Box sx={{ flex: '1 1 200px' }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="nationality-label">Nationality</InputLabel>
-                <Select
-                  labelId="nationality-label"
-                  value={formData.nationality}
-                  onChange={(e) => setFormData(prev => ({ ...prev, nationality: e.target.value }))}
-                  label="Nationality"
-                >
-                  <MenuItem value="Indian">Indian</MenuItem>
-                  <MenuItem value="Foreign">Foreign</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-            <Box sx={{ flex: '1 1 200px' }}>
-              <TextField
-                label="Booking Instructions"
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={formData.booking_instructions}
-                onChange={(e) => setFormData(prev => ({ ...prev, booking_instructions: e.target.value }))}
-              />
-            </Box>
-
-            <Box sx={{ flex: '1 1 300px' }}>
-              <TextField
-                label="Guest Special Instructions"
-                fullWidth
-                size="small"
-                variant="outlined"
-                multiline
-                rows={2}
-                value={formData.guest_special_instructions}
-                onChange={(e) => setFormData(prev => ({ ...prev, guest_special_instructions: e.target.value }))}
-              />
-            </Box>
-          </Box>
-
-          <Box sx={{ mt: 2 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  color="primary"
-                  checked={formData.is_vip}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_vip: e.target.checked }))}
-                />
-              }
-              label="Is VIP"
-            />
-          </Box>
-        </Box>
-
-        {/* Submit Button */}
-        <Box display="flex" justifyContent="flex-end" mt={2} width="100%">
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={isSubmitting}
-            sx={{
-              px: 4,
-              py: 1,
-              fontWeight: 'bold',
-              textTransform: 'none',
-              borderRadius: 1,
-              boxShadow: 'none',
-              '&:hover': {
-                boxShadow: 'none',
-                bgcolor: '#1b5e20'
-              }
-            }}
-          >
-            {isSubmitting ? 'Processing...' : isEditMode ? 'Update Check-In' : 'Create Check-In'}
-          </Button>
-        </Box>
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh'
+      }}>
+        <UILoader size={80} />
       </Box>
+    );
+  }
 
-      {/* Alert Dialog */}
-      <Dialog
-        open={openAlert}
-        onClose={() => setOpenAlert(false)}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">Capacity Exceeded</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {alertMessage}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenAlert(false)} color="primary" autoFocus>
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
+  return (
+    <Fade in={true} timeout={500}>
+      <FormContainer>
+        <FormTitle variant="h6">
+          {isEditMode ? 'Edit Check-In' : 'Quick Check-In'}
+        </FormTitle>
 
-      {/* Snackbar */}
-      {snackbar}
-    </Paper>
+        <Divider sx={{ 
+          mb: 4,
+          borderColor: 'divider',
+          borderBottomWidth: '2px'
+        }} />
+
+        <Box 
+          component="form" 
+          onSubmit={handleSubmit}
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2rem'
+          }}
+        >
+          <RoomDetailsForm
+            roomDetails={roomDetails}
+            dropdowns={dropdowns}
+            isMobile={isMobile}
+            cache={cache}
+            onRoomTypeChange={handleRoomTypeChange}
+            onRoomNoChange={handleRoomNoChange}
+            onRatePlanChange={handleRatePlanChange}
+            onPaxChange={handlePaxChange}
+            onDiscTypeChange={handleDiscTypeChange}
+            onDiscValChange={handleDiscValChange}
+            onAddRoom={addRoomRow}
+            onRemoveRoom={removeRoomRow}
+            onRoomFieldChange={(index, field, value) => {
+              const updated = [...roomDetails];
+              updated[index][field] = value;
+              setRoomDetails(updated);
+            }}
+          />
+
+          <GuestInfoForm
+            formData={formData}
+            dropdowns={dropdowns}
+            onInputChange={handleInputChange}
+            onDateChange={handleDateChange}
+            onFileUpload={handleFileUpload}
+            onNumberOfDaysChange={handleNumberOfDaysChange}
+          />
+
+          <Box 
+            display="flex" 
+            justifyContent="flex-end" 
+            mt={4}
+            sx={{
+              position: 'sticky',
+              bottom: '1rem',
+              zIndex: 10,
+              backgroundColor: 'background.paper',
+              padding: '1rem',
+              borderRadius: '8px',
+              boxShadow: '0 -4px 12px rgba(0,0,0,0.05)'
+            }}
+          >
+            <SubmitButton
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={isSubmitting}
+              size="large"
+            >
+              {isSubmitting ? 'Processing...' : isEditMode ? 'Update Check-In' : 'Create Check-In'}
+            </SubmitButton>
+          </Box>
+        </Box>
+
+        <Dialog
+          open={openAlert}
+          onClose={() => setOpenAlert(false)}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+          TransitionComponent={Slide}
+          PaperProps={{
+            sx: {
+              borderRadius: '12px',
+              padding: '1rem',
+              minWidth: isMobile ? '90%' : '400px'
+            }
+          }}
+        >
+          <DialogTitle id="alert-dialog-title" sx={{ fontWeight: 600 }}>
+            Validation Error
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description" sx={{ fontSize: '1rem' }}>
+              {alertMessage}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => setOpenAlert(false)} 
+              color="primary" 
+              variant="contained"
+              sx={{
+                borderRadius: '6px',
+                textTransform: 'none',
+                fontWeight: 500
+              }}
+            >
+              OK
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {snackbar}
+      </FormContainer>
+    </Fade>
   );
 };
 
