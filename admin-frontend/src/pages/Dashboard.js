@@ -34,6 +34,7 @@ import { styled, useTheme, alpha } from '@mui/material/styles';
 import { useAuth } from '../utils/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeSwitcher from '../components/ThemeSwitcher';
+import HomeWorkIcon from '@mui/icons-material/HomeWork';
 
 // Constants
 const DRAWER_WIDTH = 280;
@@ -64,7 +65,7 @@ const SidebarListItem = styled(ListItem, {
   margin: theme.spacing(0.5, 1),
   paddingLeft: theme.spacing(2.5),
   backgroundColor: active ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-  color: active ? theme.palette.primary.main : theme.palette.text.primary,
+   color: active ? theme.palette.primary.main : theme.palette.text.primary,
   fontWeight: active ? 600 : 400,
   '&:hover': {
     backgroundColor: alpha(theme.palette.primary.main, 0.15),
@@ -168,7 +169,9 @@ const DashboardLayout = ({ onModeChange, onColorChange, currentMode }) => {
               icon: <ApartmentIcon />,
               key: 'nonrevenuereports',
               submenu: [
+                { name: 'Checkin/Out -Report', path: '/dashboard/checkinoout-report', icon: <BusinessIcon /> },
                 { name: 'Police Report', path: '/dashboard/police-report', icon: <BusinessIcon /> },
+                { name: 'Room Status Report', path: '/dashboard/rooms-report', icon: <BusinessIcon /> },
               ],
             },
             {
@@ -176,7 +179,7 @@ const DashboardLayout = ({ onModeChange, onColorChange, currentMode }) => {
               icon: <PeopleIcon />,
               key: 'revenuereports',
               submenu: [
-                { name: 'Talent Profiles', path: '/dashboard/talent-profiles', icon: <AccountCircleIcon /> },
+                // { name: 'Talent Profiles', path: '/dashboard/talent-profiles', icon: <AccountCircleIcon /> },
               ],
             },
           ],
@@ -874,7 +877,7 @@ const DashboardLayout = ({ onModeChange, onColorChange, currentMode }) => {
       >
         <MenuItem
           onClick={() => {
-            navigate('/dashboard/profile', { state: { user } });
+            navigate('/dashboard/profile');
             handleMenuClose();
           }}
           sx={{
@@ -887,6 +890,22 @@ const DashboardLayout = ({ onModeChange, onColorChange, currentMode }) => {
             <AccountCircleIcon fontSize="small" color="primary" />
           </ListItemIcon>
           <ListItemText primary="Profile" primaryTypographyProps={{ variant: 'body2' }} />
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            navigate('/dashboard/property', { state: { propid: user?.propid } });
+            handleMenuClose();
+          }}
+          sx={{
+            '&:hover': {
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+            },
+          }}
+        >
+          <ListItemIcon>
+            <HomeWorkIcon fontSize="small" color="primary" />
+          </ListItemIcon>
+          <ListItemText primary="Property" primaryTypographyProps={{ variant: 'body2' }} />
         </MenuItem>
         <MenuItem
           onClick={() => {

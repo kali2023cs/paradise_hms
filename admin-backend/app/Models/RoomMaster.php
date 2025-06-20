@@ -41,5 +41,6 @@ class RoomMaster extends Model
     {
         return $this->belongsTo(RoomStatusMaster::class, 'status_id');
     }
+    
 }
 

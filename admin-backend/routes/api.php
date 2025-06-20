@@ -10,7 +10,7 @@ use App\Http\Controllers\RoommenuController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\NonRevenueController;
-use App\Http\Controllers\MenuController;
+use App\Http\Controllers\PropertyController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -19,12 +19,15 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\SetTenantDatabase::class])->group(function () {
 
-    Route::get('/menu', [MenuController::class, 'index']);
 // BlockMaster routes
     Route::get('/blockmaster', [MasterController::class, 'blockmaster']);
     Route::post('/addblockmaster', [MasterController::class, 'addblockmaster']);
     Route::put('/blockmaster/{id}', [MasterController::class, 'editblockmaster']);
     Route::delete('/blockmaster/{id}', [MasterController::class, 'deleteBlockMaster']);
+
+    Route::get('/getproperty/{id}', [PropertyController::class, 'getPropertyById']);
+    Route::put('/updateproperty/{id}', [PropertyController::class, 'updateProperty']);
+
 
     // FloorMaster routes
     Route::get('/floormaster', [MasterController::class, 'floormaster']);
@@ -66,6 +69,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\SetTenantDatabase::class
     Route::get('/invoices/generate-pdf/{invoiceNumber}', [InvoiceController::class, 'generatePdf']);
 
     Route::post('/generate-police-report', [NonRevenueController::class, 'generatePoliceReport']);
+    Route::post('/generate-checkinout-report', [NonRevenueController::class, 'generateCheckInOutReport']);
+    Route::post('/generate-rooms-report', [NonRevenueController::class, 'generateRoomsReport']);
 
     Route::get('/getAllActiveRooms', [DashboardController::class, 'getAllActiveRooms']);
     Route::get('/getArrivalModes', [CheckinController::class, 'getArrivalModes']);

@@ -28,7 +28,7 @@ class RoommenuController extends Controller
                 'room_master.*',
                 'roomstatus_master.status_name as status_name'
             )
-            ->whereIn(DB::raw('UPPER(roomstatus_master.status_name)'), ['AVAILABLE', 'OUT OF ORDER'])
+            ->whereIn(DB::connection('mysql2')->raw('UPPER(roomstatus_master.status_name)'), ['AVAILABLE', 'OUT OF ORDER'])
             ->get();
 
         return response()->json([
@@ -49,7 +49,7 @@ class RoommenuController extends Controller
             ], 404);
         }
 
-        $status_id = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'BLOCKED')
+        $status_id = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'BLOCKED')
             ->pluck('id')
             ->first();
 
@@ -81,7 +81,7 @@ class RoommenuController extends Controller
 
     public function retriveBlockedRooms()
     {
-        $blockedStatusId = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'BLOCKED')->pluck('id')->first();
+        $blockedStatusId = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'BLOCKED')->pluck('id')->first();
 
         if (!$blockedStatusId) {
             return response()->json([
@@ -109,7 +109,7 @@ class RoommenuController extends Controller
             ], 404);
         }
 
-        $dirtyStatusId = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'DIRTY')->pluck('id')->first();
+        $dirtyStatusId = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'DIRTY')->pluck('id')->first();
 
         if (!$dirtyStatusId) {
             return response()->json([
@@ -136,9 +136,9 @@ class RoommenuController extends Controller
     {
         try {
             $validated = $request->validate([
-                'room_id' => 'required|integer|exists:room_master,id',
-                'cleaner_id' => 'required|integer|exists:cleaner_master,id',
-                'status_id' => 'required|integer|exists:cleaning_status_master,id',
+                'room_id' => 'required|integer|exists:mysql2.room_master,id',
+                'cleaner_id' => 'required|integer|exists:mysql2.cleaner_master,id',
+                'status_id' => 'required|integer|exists:mysql2.cleaning_status_master,id',
                 'remarks' => 'nullable|string',
             ]);
 
@@ -154,11 +154,11 @@ class RoommenuController extends Controller
 
             // Update room status to "Cleaning"
             if($validated['status_id'] == 3){
-                $givenStatusId = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'AVAILABLE')
+                $givenStatusId = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'AVAILABLE')
                 ->pluck('id')
                 ->first();
             }else{
-                $givenStatusId = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'CLEANING')
+                $givenStatusId = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'CLEANING')
                 ->pluck('id')
                 ->first();
             }
@@ -186,8 +186,8 @@ class RoommenuController extends Controller
     {
         try {
             $validated = $request->validate([
-                'room_id' => 'required|integer|exists:room_master,id',
-                'status_id' => 'required|integer|exists:cleaning_status_master,id',
+                'room_id' => 'required|integer|exists:mysql2.room_master,id',
+                'status_id' => 'required|integer|exists:mysql2.cleaning_status_master,id',
             ]);
 
             // Find the latest cleaning log for this room
@@ -210,7 +210,7 @@ class RoommenuController extends Controller
             ]);
 
             // Update room status to "Available"
-            $availableStatusId = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'AVAILABLE')
+            $availableStatusId = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'AVAILABLE')
                 ->pluck('id')
                 ->first();
             
@@ -234,7 +234,7 @@ class RoommenuController extends Controller
 
     public function getCleaningMasters()
     {
-        $dirtyStatusId = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'DIRTY')
+        $dirtyStatusId = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'DIRTY')
             ->pluck('id')
             ->first();
 
@@ -268,9 +268,9 @@ class RoommenuController extends Controller
     {
         try {
             $validated = $request->validate([
-                'room_id' => 'required|integer|exists:room_master,id',
-                'maintenance_type_id' => 'required|integer|exists:maintenance_master,id',
-                'maintenance_status_id' => 'required|integer|exists:maintenance_status_master,id',
+                'room_id' => 'required|integer|exists:mysql2.room_master,id',
+                'maintenance_type_id' => 'required|integer|exists:mysql2.maintenance_master,id',
+                'maintenance_status_id' => 'required|integer|exists:mysql2.maintenance_status_master,id',
                 'issue_description' => 'required|string',
                 'reported_by' => 'nullable|integer|exists:users,id',
             ]);
@@ -287,7 +287,7 @@ class RoommenuController extends Controller
             ]);
 
             // Update room status to "Under Maintenance"
-            $maintenanceStatusId = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'MAINTENANCE')
+            $maintenanceStatusId = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'MAINTENANCE')
                 ->pluck('id')
                 ->first();
             
@@ -311,7 +311,7 @@ class RoommenuController extends Controller
 
     public function getMaintenanceMasters()
     {
-        $availableStatusId = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'AVAILABLE')->pluck('id')->first();
+        $availableStatusId = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'AVAILABLE')->pluck('id')->first();
         try {
             // Get all active rooms regardless of status for resolution
             $rooms = RoomMaster::where('is_active', true)->where('status_id',$availableStatusId)
@@ -345,13 +345,13 @@ class RoommenuController extends Controller
     {
         try {
             $validated = $request->validate([
-                'room_id' => 'required|integer|exists:room_master,id',
-                'maintenance_status_id' => 'required|integer|exists:maintenance_status_master,id',
+                'room_id' => 'required|integer|exists:mysql2.room_master,id',
+                'maintenance_status_id' => 'required|integer|exists:mysql2.maintenance_status_master,id',
                 'remarks' => 'nullable|string',
             ]);
 
             // Verify the status is actually "resolved"
-            $resolvedStatus = MaintenanceStatusMaster::where(DB::raw('UPPER(status_name)'), 'RESOLVED')
+            $resolvedStatus = MaintenanceStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'RESOLVED')
                 ->where('id', $validated['maintenance_status_id'])
                 ->first();
 
@@ -383,7 +383,7 @@ class RoommenuController extends Controller
             ]);
 
             // Update room status to "Available"
-            $dirtyStatusId = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'DIRTY')
+            $dirtyStatusId = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'DIRTY')
                 ->pluck('id')
                 ->first();
             
@@ -418,7 +418,7 @@ class RoommenuController extends Controller
 
         try {
             // Get checkin master details
-            $checkinMaster = DB::table('checkin_master')
+            $checkinMaster = DB::connection('mysql2')->table('checkin_master')
             ->select('checkin_master.*', 'gender_master.gender_name as gendername','arrival_mode.mode_name','title_master.title_name')
             ->join('gender_master', 'gender_master.id', '=', 'checkin_master.gender')
             ->join('title_master', 'title_master.id', '=', 'checkin_master.title')
@@ -435,7 +435,7 @@ class RoommenuController extends Controller
             }
 
             // Get room transaction details
-            $roomTransaction = DB::table('checkin_room_trans')
+            $roomTransaction = DB::connection('mysql2')->table('checkin_room_trans')
             ->select('checkin_room_trans.*','plans.plan_name','room_master.room_no','roomtype_master.room_type_name')
             ->join('plans', 'plans.id', '=', 'checkin_room_trans.rate_plan_id')
             ->join('room_master', 'room_master.id', '=', 'checkin_room_trans.room_id')

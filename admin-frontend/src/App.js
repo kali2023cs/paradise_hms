@@ -7,6 +7,8 @@ import Register from './pages/Register';
 import DashboardLayout from './pages/Dashboard';
 import DashboardContent from './components/dashboard/DashboardContent';
 import PoliceReport from './components/reports/non-rev/PoliceReport';
+import RoomsReport from './components/reports/non-rev/RoomsReport';
+import CheckinOutReport from './components/reports/non-rev/CheckInOutReport';
 import BlockMaster from './components/dashboard/master/BlockMaster';
 import CleanRoom from './components/dashboard/master/CleanRoom';
 import CheckinInfo from './components/dashboard/master/CheckinInfo';
@@ -22,6 +24,7 @@ import UnblockRoom from './components/dashboard/master/UnblockRoom';
 import CheckinList from './components/dashboard/master/CheckinList';
 import Settings from './components/dashboard/SettingsContent';
 import Profile from './components/dashboard/UsersContent';
+import Property from './components/dashboard/PropertyContent';
 import Protected from './components/dashboard/UsersContent';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 
@@ -63,18 +66,12 @@ function App() {
             default: mode === 'light' ? '#f5f5f5' : '#121212',
             paper: mode === 'light' ? '#ffffff' : '#1e1e1e',
           },
-        },
-        components: {
-          MuiButton: {
-            styleOverrides: {
-              root: {
-                borderRadius: 8,
-                textTransform: 'none',
-              },
-            },
+          text: {
+            primary: mode === 'light' ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.87)',
+            secondary: mode === 'light' ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.6)',
           },
-          // Add other component overrides as needed
         },
+        // ... rest of your theme config
       }),
     [mode, primaryColor]
   );
@@ -119,11 +116,14 @@ function App() {
                 <Route path="checkin-list" element={<CheckinList />} />
                 <Route path="invoices" element={<InvoicesPage />} />
                 <Route path="police-report" element={<PoliceReport />} />
+                <Route path="rooms-report" element={<RoomsReport />} />
+                <Route path="checkinoout-report" element={<CheckinOutReport />} />
                 <Route path="invoices/:invoice_number" element={<InvoicesPage />} />
 
                 {/* System */}
                 <Route path="settings" element={<Settings />} />
                 <Route path="profile" element={<Profile />} />
+                <Route path="property" element={<Property />} />
               </Route>
               
               <Route path="/protected" element={<Protected />} />

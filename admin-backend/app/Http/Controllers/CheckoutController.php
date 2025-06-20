@@ -109,7 +109,7 @@ class CheckoutController extends Controller
     public function processCheckout(Request $request)
     {
         $request->validate([
-            'checkin_id' => 'required|exists:checkin_master,id',
+            'checkin_id' => 'required|exists:mysql2.checkin_master,id',
             'actual_checkout_datetime' => 'required|date',
             'checkout_remarks' => 'nullable|string',
             'payment_method' => 'required_if:payment_amount,>0|string|nullable',
@@ -131,7 +131,7 @@ class CheckoutController extends Controller
 
         $check_room_id = $checkRoom ? $checkRoom->id : null;
 
-        DB::beginTransaction();
+        DB::connection('mysql2')->beginTransaction();
 
         try {
             // 1. Get check-in data
@@ -214,7 +214,7 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            $dirtyStatusId = RoomStatusMaster::where(DB::raw('UPPER(status_name)'), 'DIRTY')->pluck('id')->first();
+            $dirtyStatusId = RoomStatusMaster::where(DB::connection('mysql2')->raw('UPPER(status_name)'), 'DIRTY')->pluck('id')->first();
 
             RoomMaster::where('id', $request->room_id)
                 ->update([
@@ -223,7 +223,7 @@ class CheckoutController extends Controller
                 ]);
  
 
-            DB::commit();
+            DB::connection('mysql2')->commit();
 
             return response()->json([
                 'success' => true,
@@ -235,7 +235,7 @@ class CheckoutController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
+            DB::connection('mysql2')->rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error processing checkout: ' . $e->getMessage(),

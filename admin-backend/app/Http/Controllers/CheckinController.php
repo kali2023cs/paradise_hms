@@ -125,7 +125,23 @@ class CheckinController extends Controller
             $checkin = CheckinMaster::create($data['guestInfo']);
 
             foreach ($data['roomDetails'] as $room) {
-                CheckinRoomTrans::create(array_merge($room, ['checkin_id' => $checkin->id]));
+                $roomData = [
+                    'checkin_id' => $checkin->id,
+                    'room_type_id' => $room['roomTypeId'],
+                    'room_id' => $room['roomId'],
+                    'rate_plan_id' => $room['ratePlanId'],
+                    'guest_name' => $room['guestName'],
+                    'contact' => $room['contact'],
+                    'male' => $room['male'],
+                    'female' => $room['female'],
+                    'extra' => $room['extra'],
+                    'net_rate' => $room['netRate'],
+                    'disc_type' => $room['discType'],
+                    'disc_val' => $room['discVal'],
+                    'total' => $room['total'],
+                ];
+
+                CheckinRoomTrans::create($roomData);
 
                 RoomMaster::where('id', $room['roomId'])->update([
                     'checkin_id' => $checkin->id,
@@ -149,6 +165,7 @@ class CheckinController extends Controller
             ], 500);
         }
     }
+
 
     public function editCheckin(Request $request, $checkinId)
     {

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 19, 2025 at 03:45 PM
+-- Generation Time: Jun 20, 2025 at 03:17 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -210,8 +210,8 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (72, 'App\\Models\\User', 1, 'auth_token', 'fbe02c140b0caf6ba74bb5c9cac26562eadee36d379a7baf40d7b0f6bb133a95', '[\"*\"]', '2025-06-19 01:29:40', NULL, '2025-06-19 01:26:44', '2025-06-19 01:29:40'),
 (75, 'stdClass', 1, 'auth_token', '719999e81f31b552b1fa71ed97970800040ff7579c375b0e3497369bb71ee71b', '[\"*\"]', NULL, NULL, '2025-06-19 03:35:23', '2025-06-19 03:35:23'),
 (76, 'stdClass', 1, 'auth_token', '97fb2261f6f2f953c65e1230035cc508f42d917ec77c8abd7c16d0dc66d81ebc', '[\"*\"]', NULL, NULL, '2025-06-19 03:36:35', '2025-06-19 03:36:35'),
-(85, 'App\\Models\\User', 1, 'auth_token', '13160dba723ec1abba8799c5d8ecb03791e3caed8e4fe7a4bf202bc102d93039', '[\"*\"]', '2025-06-19 08:13:49', NULL, '2025-06-19 04:14:48', '2025-06-19 08:13:49'),
-(89, 'App\\Models\\User', 1, 'auth_token', 'e1f89850f52db8ffc33064060241df5d9cbff11ba731cb5b92c8f700b33eb237', '[\"*\"]', '2025-06-19 08:14:06', NULL, '2025-06-19 05:58:44', '2025-06-19 08:14:06');
+(85, 'App\\Models\\User', 1, 'auth_token', '13160dba723ec1abba8799c5d8ecb03791e3caed8e4fe7a4bf202bc102d93039', '[\"*\"]', '2025-06-19 23:55:18', NULL, '2025-06-19 04:14:48', '2025-06-19 23:55:18'),
+(94, 'App\\Models\\User', 1, 'auth_token', '971dd86dee95c58d9acbe9e0ffeedcc8a5b180b19299ba7462e05d6d0dc642a2', '[\"*\"]', '2025-06-20 07:46:57', NULL, '2025-06-20 06:14:02', '2025-06-20 07:46:57');
 
 -- --------------------------------------------------------
 
@@ -241,7 +241,7 @@ CREATE TABLE `property_master` (
 --
 
 INSERT INTO `property_master` (`id`, `cmp_id`, `property_name`, `property_code`, `address`, `city`, `state`, `country`, `zip_code`, `contact_number`, `email`, `status`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Goio Grand Hotel', 'goio', '456 Anna Salai, Chennai, Tamil Nadu, India', 'Chennai', 'Tamil Nadu', 'India', '600002', '+91-9845098450', 'goio@gmail.com', 1, '2025-06-17 11:53:30', '2025-06-19 08:37:14'),
+(1, 1, 'Paradise Hotel', 'goio', '456 Anna Salai,Anna Nagar', 'Chennai', 'Tamil Nadu', 'India', '600040', '+91-9845098450', 'goio@gmail.com', 1, '2025-06-17 11:53:30', '2025-06-20 10:07:44'),
 (2, 1, 'Grand Hotel', 'grand', 'Kilakarai-Ramanathapuram, India', 'Ramnad', 'Tamil Nadu', 'India', '623515', '+91-9845098450', 'grand@gmail.com', 1, '2025-06-17 06:23:30', '2025-06-19 03:07:14');
 
 -- --------------------------------------------------------
@@ -439,7 +439,7 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
 
 --
 -- AUTO_INCREMENT for table `property_master`

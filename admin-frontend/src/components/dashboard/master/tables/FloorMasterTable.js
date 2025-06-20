@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import EnhancedDataTable from '../../../common/EnhancedDataTable';
 import api from '../../../../utils/axios';
+import UILoder from '../../../common/UILoader'
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import Button from '@mui/material/Button';
@@ -144,15 +145,19 @@ const FloorMasterTable = () => {
 
   return (
     <>
-      <EnhancedDataTable
-        title="Floor Master"
-        rows={rowsWithActions}
-        headCells={headCells}
-        defaultOrderBy="floor_no"
-        onAddClick={handleAdd}
-        onDeleteClick={handleDelete}
-        loading={loading}
-      />
+      {loading ? (
+        <UILoder />
+      ) : (
+        <EnhancedDataTable
+          title="Floor Master"
+          rows={rowsWithActions}
+          headCells={headCells}
+          defaultOrderBy="floor_no"
+          onAddClick={handleAdd}
+          onDeleteClick={handleDelete}
+        />
+      )}
+
 
       <Modal
         keepMounted

@@ -3,11 +3,12 @@ import PropTypes from 'prop-types';
 import {
   Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination,
   TableRow, TableSortLabel, Checkbox, Toolbar, Typography, Button,
-  FormControlLabel, Switch,
+  FormControlLabel, Switch, useTheme,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { visuallyHidden } from '@mui/utils';
+import { alpha } from '@mui/material/styles';
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) return -1;
@@ -22,11 +23,13 @@ function getComparator(order, orderBy) {
 }
 
 const EnhancedTableHead = ({ headCells, order, orderBy, onRequestSort, onSelectAllClick, numSelected, rowCount }) => {
+  const theme = useTheme();
+
   const createSortHandler = (property) => (event) => onRequestSort(event, property);
 
   return (
     <TableHead>
-      <TableRow sx={{ backgroundColor: '#1976d2' }}>
+      <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
         <TableCell padding="checkbox" sx={{ backgroundColor: 'inherit' }}>
           <Checkbox
             color="primary"
@@ -34,9 +37,9 @@ const EnhancedTableHead = ({ headCells, order, orderBy, onRequestSort, onSelectA
             checked={rowCount > 0 && numSelected === rowCount}
             onChange={onSelectAllClick}
             sx={{
-              color: 'white',
-              '&.Mui-checked': { color: 'white' },
-              '&.MuiCheckbox-indeterminate': { color: 'white' }
+              color: theme.palette.primary.contrastText,
+              '&.Mui-checked': { color: theme.palette.primary.contrastText },
+              '&.MuiCheckbox-indeterminate': { color: theme.palette.primary.contrastText }
             }}
           />
         </TableCell>
@@ -46,16 +49,21 @@ const EnhancedTableHead = ({ headCells, order, orderBy, onRequestSort, onSelectA
             align={headCell.numeric ? 'right' : 'left'}
             padding={headCell.disablePadding ? 'none' : 'normal'}
             sortDirection={orderBy === headCell.id ? order : false}
-            sx={{ backgroundColor: 'inherit', color: 'white', fontWeight: 600, fontSize: '0.875rem' }}
+            sx={{ 
+              backgroundColor: 'inherit', 
+              color: theme.palette.primary.contrastText, 
+              fontWeight: 600, 
+              fontSize: '0.875rem' 
+            }}
           >
             <TableSortLabel
               active={orderBy === headCell.id}
               direction={orderBy === headCell.id ? order : 'asc'}
               onClick={createSortHandler(headCell.id)}
               sx={{
-                color: 'white !important',
-                '&:hover': { color: 'white !important' },
-                '&.Mui-active': { color: 'white !important' },
+                color: `${theme.palette.primary.contrastText} !important`,
+                '&:hover': { color: `${theme.palette.primary.contrastText} !important` },
+                '&.Mui-active': { color: `${theme.palette.primary.contrastText} !important` },
               }}
             >
               {headCell.label}
@@ -73,22 +81,34 @@ const EnhancedTableHead = ({ headCells, order, orderBy, onRequestSort, onSelectA
 };
 
 const EnhancedTableToolbar = ({ numSelected, title, onActionClick }) => {
+  const theme = useTheme();
+
   return (
     <Toolbar
       sx={{
         pl: { sm: 2 },
         pr: { xs: 1, sm: 1 },
-        bgcolor: numSelected > 0 ? '#e3f2fd' : '#1976d2',
+        bgcolor: numSelected > 0 
+          ? alpha(theme.palette.primary.light, 0.2) 
+          : theme.palette.primary.main,
         borderRadius: '12px 12px 0 0',
-        color: numSelected > 0 ? 'black' : 'white',
+        color: numSelected > 0 
+          ? theme.palette.text.primary 
+          : theme.palette.primary.contrastText,
         minHeight: '64px',
         display: 'flex',
         justifyContent: 'space-between',
-        transition: 'all 0.3s ease',
+        transition: theme.transitions.create(['background-color', 'color'], {
+          duration: theme.transitions.duration.standard,
+        }),
       }}
     >
       <Typography
-        sx={{ flex: '1 1 100%', fontWeight: 600, color: 'inherit' }}
+        sx={{ 
+          flex: '1 1 100%', 
+          fontWeight: 600, 
+          color: 'inherit' 
+        }}
         variant="h6"
         component="div"
       >
@@ -103,14 +123,14 @@ const EnhancedTableToolbar = ({ numSelected, title, onActionClick }) => {
         sx={{
           textTransform: 'none',
           fontWeight: 600,
-          fontSize: '0.75rem', // reduced text size
-          minWidth: 160, // increased width
+          fontSize: '0.75rem',
+          minWidth: 160,
           ...(numSelected === 0 && {
-            borderColor: 'white',
-            color: 'white',
+            borderColor: theme.palette.primary.contrastText,
+            color: theme.palette.primary.contrastText,
             '&:hover': {
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              borderColor: 'white',
+              backgroundColor: alpha(theme.palette.primary.contrastText, 0.15),
+              borderColor: theme.palette.primary.contrastText,
             },
           }),
         }}
@@ -129,6 +149,7 @@ export default function EnhancedDataTable({
   onAddClick,
   onDeleteClick,
 }) {
+  const theme = useTheme();
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState(defaultOrderBy);
   const [selected, setSelected] = React.useState([]);
@@ -172,7 +193,7 @@ export default function EnhancedDataTable({
   const handleActionClick = () => {
     if (selected.length > 0) {
       if (onDeleteClick) onDeleteClick(selected);
-      setSelected([]); // clear selection after delete
+      setSelected([]);
     } else {
       if (onAddClick) onAddClick();
     }
@@ -188,7 +209,14 @@ export default function EnhancedDataTable({
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Paper sx={{ width: '100%', mb: 2, borderRadius: 3, boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
+      <Paper sx={{ 
+        width: '100%', 
+        mb: 2, 
+        borderRadius: 3, 
+        boxShadow: theme.shadows[2],
+        overflow: 'hidden',
+        border: `1px solid ${theme.palette.divider}`,
+      }}>
         <EnhancedTableToolbar
           numSelected={selected.length}
           title={title}
@@ -198,9 +226,17 @@ export default function EnhancedDataTable({
           sx={{
             borderRadius: '0 0 12px 12px',
             maxHeight: 'calc(100vh - 200px)',
-            '&::-webkit-scrollbar': { width: '8px', height: '8px' },
-            '&::-webkit-scrollbar-thumb': { backgroundColor: '#1976d2', borderRadius: '4px' },
-            '&::-webkit-scrollbar-track': { backgroundColor: '#f1f1f1' }
+            '&::-webkit-scrollbar': { 
+              width: '8px', 
+              height: '8px' 
+            },
+            '&::-webkit-scrollbar-thumb': { 
+              backgroundColor: theme.palette.primary.main, 
+              borderRadius: '4px' 
+            },
+            '&::-webkit-scrollbar-track': { 
+              backgroundColor: theme.palette.grey[100] 
+            }
           }}
         >
           <Table
@@ -208,7 +244,7 @@ export default function EnhancedDataTable({
             sx={{
               minWidth: 750,
               '& .MuiTableCell-root': {
-                borderBottom: '1px solid rgba(224, 224, 224, 0.5)'
+                borderBottom: `1px solid ${theme.palette.divider}`
               }
             }}
           >
@@ -239,18 +275,22 @@ export default function EnhancedDataTable({
                       sx={{
                         cursor: 'pointer',
                         '&.Mui-selected': {
-                          backgroundColor: '#e3f2fd',
-                          '&:hover': { backgroundColor: '#bbdefb' },
+                          backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                          '&:hover': { 
+                            backgroundColor: alpha(theme.palette.primary.main, 0.12) 
+                          },
                         },
                         '&.Mui-selected .MuiTableCell-root': {
-                          color: '#1976d2',
+                          color: theme.palette.primary.dark,
                           fontWeight: 600,
                         },
                         '&.Mui-selected .MuiCheckbox-root': {
-                          color: '#1976d2',
+                          color: theme.palette.primary.main,
                         },
                         '&:last-child td': { borderBottom: 0 },
-                        '&:hover': { backgroundColor: '#f5f5f5' }
+                        '&:hover': { 
+                          backgroundColor: theme.palette.action.hover 
+                        }
                       }}
                     >
                       <TableCell padding="checkbox">
@@ -259,8 +299,12 @@ export default function EnhancedDataTable({
                           checked={isItemSelected}
                           inputProps={{ 'aria-labelledby': labelId }}
                           sx={{
-                            color: isItemSelected ? '#1976d2' : 'rgba(0, 0, 0, 0.54)',
-                            '&.Mui-checked': { color: '#1976d2' },
+                            color: isItemSelected 
+                              ? theme.palette.primary.main 
+                              : theme.palette.action.disabled,
+                            '&.Mui-checked': { 
+                              color: theme.palette.primary.main 
+                            },
                           }}
                         />
                       </TableCell>
@@ -269,7 +313,12 @@ export default function EnhancedDataTable({
                           key={cell.id}
                           align={cell.numeric ? 'right' : 'left'}
                           padding={cell.disablePadding ? 'none' : 'normal'}
-                          sx={{ color: isItemSelected ? '#1976d2' : 'inherit', fontWeight: isItemSelected ? 600 : 'normal' }}
+                          sx={{ 
+                            color: isItemSelected 
+                              ? theme.palette.primary.dark 
+                              : theme.palette.text.primary, 
+                            fontWeight: isItemSelected ? 600 : 'normal' 
+                          }}
                         >
                           {row[cell.id]}
                         </TableCell>
@@ -279,7 +328,15 @@ export default function EnhancedDataTable({
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={headCells.length + 1} align="center" sx={{ py: 4, fontStyle: 'italic', color: 'gray' }}>
+                  <TableCell 
+                    colSpan={headCells.length + 1} 
+                    align="center" 
+                    sx={{ 
+                      py: 4, 
+                      fontStyle: 'italic', 
+                      color: theme.palette.text.secondary 
+                    }}
+                  >
                     No rows found.
                   </TableCell>
                 </TableRow>
@@ -295,7 +352,12 @@ export default function EnhancedDataTable({
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          sx={{ borderTop: '1px solid rgba(224, 224, 224, 1)' }}
+          sx={{ 
+            borderTop: `1px solid ${theme.palette.divider}`,
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              color: theme.palette.text.primary,
+            }
+          }}
         />
       </Paper>
       <FormControlLabel
@@ -303,7 +365,10 @@ export default function EnhancedDataTable({
         label="Dense padding"
         sx={{
           ml: 1,
-          '& .MuiTypography-root': { fontSize: '0.875rem' }
+          '& .MuiTypography-root': { 
+            fontSize: '0.875rem',
+            color: theme.palette.text.primary 
+          }
         }}
       />
     </Box>

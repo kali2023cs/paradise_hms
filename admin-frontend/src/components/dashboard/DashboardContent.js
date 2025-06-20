@@ -1,15 +1,13 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from '@emotion/styled';
+import RoomStatusCard from '../dashboard/RoomStatusCard';
 import {
   Container,
   Typography,
   Paper,
   Grid,
   Box,
-  CircularProgress,
   Divider,
-  Chip,
   Tooltip,
   IconButton,
   Stack,
@@ -21,7 +19,9 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Badge,
+  Avatar
 } from '@mui/material';
 import {
   Bed as BedIcon,
@@ -33,7 +33,6 @@ import {
   Close as CloseIcon,
   Info as CheckInIcon,
   Block as BlockIcon,
-  Edit as EditIcon,
   CleaningServices as CleaningIcon
 } from '@mui/icons-material';
 import api from '../../utils/axios';
@@ -43,8 +42,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import DoneIcon from '@mui/icons-material/Done';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import UILoader  from '../common/UILoader';
-
+import UILoader from '../common/UILoader';
 
 const DashboardContent = () => {
   const navigate = useNavigate();
@@ -56,6 +54,7 @@ const DashboardContent = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [statusSummary, setStatusSummary] = useState([]);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -64,6 +63,23 @@ const DashboardContent = () => {
       const response = await api.get('/getAllActiveRooms');
       if (response.data.success) {
         setRooms(response.data.data);
+
+        // Calculate status summary
+        const summary = {};
+        response.data.data.forEach(room => {
+          if (!summary[room.status_name]) {
+            summary[room.status_name] = {
+              count: 0,
+              color: room.color_code
+            };
+          }
+          summary[room.status_name].count++;
+        });
+        setStatusSummary(Object.entries(summary).map(([status, data]) => ({
+          status,
+          count: data.count,
+          color: data.color
+        })));
       } else {
         setError('Failed to fetch rooms');
       }
@@ -83,7 +99,6 @@ const DashboardContent = () => {
       const groupKey = groupBy === 'floor'
         ? room.floor_name || 'Unknown Floor'
         : room.room_type_name || 'Unknown Type';
-
       if (!acc[groupKey]) acc[groupKey] = [];
       acc[groupKey].push(room);
       return acc;
@@ -121,15 +136,11 @@ const DashboardContent = () => {
   }, []);
 
   const handleRoomClick = useCallback((room, event) => {
-    // Check if click was on the info icon
     const isInfoIconClick = event.target.closest('button') !== null;
-
     if (isInfoIconClick) {
       handleOpenModal(room);
       return;
     }
-
-    // For other clicks, open context menu
     event.preventDefault();
     setSelectedRoom(room);
     setMenuPosition({
@@ -264,7 +275,7 @@ const DashboardContent = () => {
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold', color: theme.palette.primary.dark }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
           Room Dashboard
         </Typography>
         <Stack direction="row" spacing={2} alignItems="center">
@@ -292,23 +303,48 @@ const DashboardContent = () => {
               </Tooltip>
             </ToggleButton>
           </ToggleButtonGroup>
-          <Chip
-            label={`Total Rooms: ${rooms.length}`}
+          <Badge
+            badgeContent={rooms.length}
             color="primary"
-            variant="outlined"
-            onClick={() => {
-              console.log('Total Rooms:', rooms.length);
-              console.log('Full Rooms Data:', rooms);
-            }}
             sx={{
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor: theme.palette.primary.light,
-                color: 'black',
-              }
+              '& .MuiBadge-badge': {
+                right: -10,
+                top: -10,
+                border: `2px solid ${theme.palette.background.paper}`,
+                padding: '0 4px',
+              },
             }}
-          />
+          >
+            <Avatar
+              sx={{
+                bgcolor: theme.palette.primary.main,
+                width: 32,
+                height: 32
+              }}
+            >
+              <BedIcon fontSize="small" />
+            </Avatar>
+          </Badge>
         </Stack>
+      </Box>
+
+      {/* Room Status Summary Cards */}
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 2, 
+        flexWrap: 'wrap',
+        mb: 4,
+        justifyContent: 'center',
+        borderRadius: 10
+      }}>
+        {statusSummary.map(({ status, count, color }) => (
+          <RoomStatusCard 
+            key={status}
+            status={status}
+            count={count}
+            color={color}
+          />
+        ))}
       </Box>
 
       {Object.entries(groupedRooms).map(([groupName, groupRooms]) => (
@@ -319,40 +355,52 @@ const DashboardContent = () => {
             alignItems: 'center',
             mb: 2
           }}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
               {groupName.toUpperCase()}
               {groupBy === 'floor' && (
-                <Typography component="span" variant="body2" sx={{ ml: 1, color: theme.palette.text.secondary }}>
+                <Typography component="span" variant="body2" sx={{ ml: 1, color: 'text.secondary' }}>
                   ({groupRooms.length} rooms)
                 </Typography>
               )}
             </Typography>
             <Stack direction="row" spacing={1}>
-              {Object.entries(statusColors).map(([status, color]) => (
-                <Tooltip key={status} title={`${status} Rooms`}>
-                  <Chip
-                    label={getStatusCount(groupRooms, status)}
-                    size="small"
-                    sx={{
-                      backgroundColor: color,
-                      color: 'white',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        opacity: 0.9,
-                        transform: 'scale(1.05)'
-                      }
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log(`Status: ${status}`, {
-                        count: getStatusCount(groupRooms, status),
-                        rooms: groupRooms.filter(room => room.status_name === status)
-                      });
-                    }}
-                  />
-                </Tooltip>
-              ))}
+              {Object.entries(statusColors).map(([status, color]) => {
+                const count = getStatusCount(groupRooms, status);
+                if (count === 0) return null;
+
+                return (
+                  <Tooltip key={status} title={`${status} Rooms`}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#333',
+                        borderRadius: 10,
+                        px: 1,
+                        py: 0.5,
+                        cursor: 'pointer',
+                        '&:hover': {
+                          opacity: 0.9,
+                          transform: 'scale(1.05)'
+                        }
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          backgroundColor: color,
+                          mr: 1
+                        }}
+                      />
+                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        {count}
+                      </Typography>
+                    </Box>
+                  </Tooltip>
+                );
+              })}
             </Stack>
           </Box>
           <Divider sx={{ mb: 3 }} />
@@ -370,7 +418,8 @@ const DashboardContent = () => {
                   sx={{
                     p: 2,
                     borderLeft: `6px solid ${room.color_code}`,
-                    bgcolor: '#fff',
+                    bgcolor: 'background.paper',
+                    color: 'text.primary',
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
@@ -385,7 +434,7 @@ const DashboardContent = () => {
                 >
                   <Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="h6" color="textPrimary" sx={{ fontWeight: 'bold' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                         {room.room_no}
                       </Typography>
                       <Tooltip title="Room details">
@@ -398,59 +447,57 @@ const DashboardContent = () => {
                       </Tooltip>
                     </Box>
                     {groupBy === 'roomType' && (
-                      <Chip
-                        label={room.floor_name}
-                        size="small"
-                        sx={{
-                          mt: 1,
-                          backgroundColor: '#f0f0f0',
-                          fontWeight: 'medium',
-                          width: '100%',
-                          justifyContent: 'flex-start'
-                        }}
-                        icon={<FloorIcon fontSize="small" />}
-                      />
-                    )}
-                    <Chip
-                      label={groupBy === 'floor' ? room.room_type_name : room.room_type_name}
-                      size="small"
-                      sx={{
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
                         mt: 1,
-                        backgroundColor: '#f5f5f5',
-                        fontWeight: 'medium',
-                        width: '100%',
-                        justifyContent: 'flex-start'
-                      }}
-                      icon={<BedIcon fontSize="small" />}
-                      onClick={() => console.log('Chip clicked', room)} // Add this line
-                    />
+                        mb: 1,
+                        color: 'text.secondary'
+                      }}>
+                        <FloorIcon fontSize="small" sx={{ mr: 1 }} />
+                        <Typography variant="body2">{room.floor_name}</Typography>
+                      </Box>
+                    )}
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      mt: 1,
+                      mb: 1,
+                      color: 'text.secondary'
+                    }}>
+                      <BedIcon fontSize="small" sx={{ mr: 1 }} />
+                      <Typography variant="body2">{room.room_type_name}</Typography>
+                    </Box>
                   </Box>
 
                   <Box sx={{ mt: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <PersonIcon fontSize="small" sx={{ mr: 1, color: theme.palette.text.secondary }} />
-                      <Typography variant="body2" color="textSecondary">
+                      <PersonIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                         Max: {room.max_pax}
                       </Typography>
-                      <PersonAddIcon fontSize="small" sx={{ ml: 2, mr: 1, color: theme.palette.text.secondary }} />
-                      <Typography variant="body2" color="textSecondary">
+                      <PersonAddIcon fontSize="small" sx={{ ml: 2, mr: 1, color: 'text.secondary' }} />
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                         Extra: {room.max_extra_pax}
                       </Typography>
                     </Box>
-                    <Chip
-                      label={room.status_name.toUpperCase()}
-                      size={isMobile ? 'small' : 'medium'}
+                    <Box
                       sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         backgroundColor: room.color_code,
-                        color: 'white',
+                        color: room.status_name.toUpperCase() === 'AVAILABLE' ? '#ffffff' : theme.palette.getContrastText(room.color_code),
+                        padding: '4px 8px',
+                        borderRadius: 1,
                         fontWeight: 'bold',
+                        fontSize: isMobile ? '0.75rem' : '0.875rem',
+                        textAlign: 'center',
                         width: '100%'
                       }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log('Status clicked:', room.status_name, 'for room:', room.room_no);
-                      }}
-                    />
+                    >
+                      {room.status_name.toUpperCase()}
+                    </Box>
                   </Box>
                 </Paper>
               </Grid>
@@ -614,31 +661,71 @@ const DashboardContent = () => {
                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
                     Basic Information
                   </Typography>
-                  <Box sx={{ display: 'flex', mb: 1 }}>
+                  <Box sx={{
+                    display: 'flex',
+                    mb: 2,
+                    alignItems: 'center'
+                  }}>
                     <Typography variant="body1" sx={{ width: 120, color: 'text.secondary' }}>
                       Floor:
                     </Typography>
-                    <Typography variant="body1">{selectedRoom.floor_name}</Typography>
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#333',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      flexGrow: 1
+                    }}>
+                      <FloorIcon fontSize="small" sx={{ mr: 1 }} />
+                      <Typography variant="body1">{selectedRoom.floor_name}</Typography>
+                    </Box>
                   </Box>
-                  <Box sx={{ display: 'flex', mb: 1 }}>
+                  <Box sx={{
+                    display: 'flex',
+                    mb: 2,
+                    alignItems: 'center'
+                  }}>
                     <Typography variant="body1" sx={{ width: 120, color: 'text.secondary' }}>
                       Room Type:
                     </Typography>
-                    <Typography variant="body1">{selectedRoom.room_type_name}</Typography>
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#333',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      flexGrow: 1
+                    }}>
+                      <BedIcon fontSize="small" sx={{ mr: 1 }} />
+                      <Typography variant="body1">{selectedRoom.room_type_name}</Typography>
+                    </Box>
                   </Box>
-                  <Box sx={{ display: 'flex', mb: 1 }}>
+                  <Box sx={{
+                    display: 'flex',
+                    mb: 2,
+                    alignItems: 'center'
+                  }}>
                     <Typography variant="body1" sx={{ width: 120, color: 'text.secondary' }}>
                       Status:
                     </Typography>
-                    <Chip
-                      label={selectedRoom.status_name}
-                      size="small"
+                    <Box
                       sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         backgroundColor: selectedRoom.color_code,
-                        color: 'white',
+                        color: selectedRoom.status_name.toUpperCase() === 'AVAILABLE' ? '#ffffff' : theme.palette.getContrastText(selectedRoom.color_code),
+                        padding: '4px 8px',
+                        borderRadius: 1,
                         fontWeight: 'bold',
+                        flexGrow: 1
                       }}
-                    />
+                    >
+                      {selectedRoom.status_name.toUpperCase()}
+                    </Box>
                   </Box>
                 </Grid>
 
@@ -646,17 +733,47 @@ const DashboardContent = () => {
                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
                     Capacity
                   </Typography>
-                  <Box sx={{ display: 'flex', mb: 1 }}>
+                  <Box sx={{
+                    display: 'flex',
+                    mb: 2,
+                    alignItems: 'center'
+                  }}>
                     <Typography variant="body1" sx={{ width: 120, color: 'text.secondary' }}>
                       Max Guests:
                     </Typography>
-                    <Typography variant="body1">{selectedRoom.max_pax}</Typography>
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#333',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      flexGrow: 1
+                    }}>
+                      <PersonIcon fontSize="small" sx={{ mr: 1 }} />
+                      <Typography variant="body1">{selectedRoom.max_pax}</Typography>
+                    </Box>
                   </Box>
-                  <Box sx={{ display: 'flex', mb: 1 }}>
+                  <Box sx={{
+                    display: 'flex',
+                    mb: 2,
+                    alignItems: 'center'
+                  }}>
                     <Typography variant="body1" sx={{ width: 120, color: 'text.secondary' }}>
                       Extra Guests:
                     </Typography>
-                    <Typography variant="body1">{selectedRoom.max_extra_pax}</Typography>
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#333',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      flexGrow: 1
+                    }}>
+                      <PersonAddIcon fontSize="small" sx={{ mr: 1 }} />
+                      <Typography variant="body1">{selectedRoom.max_extra_pax}</Typography>
+                    </Box>
                   </Box>
                 </Grid>
               </Grid>

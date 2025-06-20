@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import EnhancedDataTable from '../../../common/EnhancedDataTable';
 import api from '../../../../utils/axios';
+import UILoder from '../../../common/UILoader'
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
 import Button from '@mui/material/Button';
@@ -179,6 +180,9 @@ const RoomTypeMasterTable = () => {
 
     return (
         <>
+        {loading ? (
+                <UILoder />
+              ) : (
             <EnhancedDataTable
                 title="Room Type Master"
                 rows={rowsWithActions}
@@ -188,6 +192,7 @@ const RoomTypeMasterTable = () => {
                 onDeleteClick={handleDelete}
                 loading={loading}
             />
+              )}
 
             <Modal
                 keepMounted

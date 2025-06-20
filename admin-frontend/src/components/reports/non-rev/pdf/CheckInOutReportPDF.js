@@ -2,7 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, Image } from '@react-pdf/renderer';
 import { PDFStyles } from '../../PDFStyles';
 
-const PoliceReportPDF = ({ data }) => {
+const CheckInOutReportPDF = ({ data }) => {
   const currentDate = new Date().toLocaleDateString();
   const currentTime = new Date().toLocaleTimeString();
   
@@ -10,7 +10,7 @@ const PoliceReportPDF = ({ data }) => {
     <Document>
       <Page size="A4" style={PDFStyles.page}>
         {/* Watermark */}
-        <Text style={PDFStyles.watermark}>CONFIDENTIAL</Text>
+        <Text style={PDFStyles.watermark}>{data.reportType === 'checkin' ? 'CHECK-IN' : 'CHECK-OUT'}</Text>
         
         {/* Header with Hotel Info */}
         <View style={PDFStyles.headerContainer}>
@@ -36,8 +36,10 @@ const PoliceReportPDF = ({ data }) => {
         
         {/* Report Title */}
         <View style={PDFStyles.header}>
-          <Text style={PDFStyles.title}>OFFICIAL POLICE REPORT</Text>
-          <Text style={PDFStyles.subtitle}>Confidential - For Official Use Only</Text>
+          <Text style={PDFStyles.title}>
+            {data.reportType === 'checkin' ? 'GUEST CHECK-IN REPORT' : 'GUEST CHECK-OUT REPORT'}
+          </Text>
+          <Text style={PDFStyles.subtitle}>Hotel Management System - Official Document</Text>
         </View>
         
         {/* Report Metadata */}
@@ -75,9 +77,7 @@ const PoliceReportPDF = ({ data }) => {
           <Text style={[PDFStyles.tableCell, { flex: 1.5 }]}>Guest Name</Text>
           <Text style={PDFStyles.tableCell}>Contact</Text>
           <Text style={PDFStyles.tableCell}>Room No</Text>
-          <Text style={PDFStyles.tableCell}>Male</Text>
-          <Text style={PDFStyles.tableCell}>Female</Text>
-          <Text style={PDFStyles.tableCell}>Extra</Text>
+          <Text style={PDFStyles.tableCell}>Room Type</Text>
           <Text style={PDFStyles.tableCell}>Arrival Mode</Text>
           <Text style={[PDFStyles.tableCell, { flex: 1.2 }]}>Check-In</Text>
           <Text style={[PDFStyles.tableCell, { flex: 1.2 }]}>
@@ -92,13 +92,11 @@ const PoliceReportPDF = ({ data }) => {
         {data.reportData.map((record, index) => (
           <View key={index} style={[PDFStyles.tableRow, { backgroundColor: index % 2 === 0 ? '#ffffff' : '#f9f9f9' }]}>
             <Text style={[PDFStyles.tableCell, { flex: 1.5 }]}>
-              {record.guest_name.trim()}
+              {record.title_name ? `${record.title_name} ${record.guest_name}` : record.guest_name}
             </Text>
             <Text style={PDFStyles.tableCell}>{record.contact_no || 'N/A'}</Text>
             <Text style={PDFStyles.tableCell}>{record.room_no || 'N/A'}</Text>
-            <Text style={PDFStyles.tableCell}>{record.male || 'N/A'}</Text>
-            <Text style={PDFStyles.tableCell}>{record.female || 'N/A'}</Text>
-            <Text style={PDFStyles.tableCell}>{record.extra || 'N/A'}</Text>
+            <Text style={PDFStyles.tableCell}>{record.room_type_name || 'N/A'}</Text>
             <Text style={PDFStyles.tableCell}>{record.mode_name || 'N/A'}</Text>
             <Text style={[PDFStyles.tableCell, { flex: 1.2 }]}>
               {record.check_in_datetime ? 
@@ -112,7 +110,7 @@ const PoliceReportPDF = ({ data }) => {
             {data.reportType === 'checkout' && (
               <Text style={[PDFStyles.tableCell, { flex: 1.2 }]}>
                 {record.late_checkout == 1 ? 'Late' : 
-                  record.early_checkout == 1 ? 'Early' : 'On Time'}
+                 record.early_checkout == 1 ? 'Early' : 'On Time'}
               </Text>
             )}
           </View>
@@ -120,15 +118,15 @@ const PoliceReportPDF = ({ data }) => {
         
         {/* Notes Section */}
         <View style={PDFStyles.noteSection}>
-          <Text style={PDFStyles.noteTitle}>IMPORTANT NOTES:</Text>
+          <Text style={PDFStyles.noteTitle}>NOTES:</Text>
           <Text>
-            1. This report contains confidential information and is intended only for official use by authorized personnel.
+            1. This report contains confidential guest information and should be handled securely.
           </Text>
           <Text>
-            2. Any unauthorized disclosure, copying, or distribution is strictly prohibited.
+            2. All check-in/check-out times are recorded by the system and should match physical registers.
           </Text>
           <Text>
-            3. Please verify all guest identification details with original documents when required.
+            3. Discrepancies should be reported to the front desk manager immediately.
           </Text>
           <Text>
             4. Report generated on {currentDate} at {currentTime}.
@@ -138,17 +136,17 @@ const PoliceReportPDF = ({ data }) => {
         {/* Signature Area */}
         <View style={PDFStyles.signature}>
           <View style={PDFStyles.signatureLine}>
-            <Text>Prepared By: {data.preparedBy || '_________________'}</Text>
+            <Text>Prepared By: _________________</Text>
           </View>
           <View style={PDFStyles.signatureLine}>
-            <Text>Authorized Signature: _________________</Text>
+            <Text>Approved By: _________________</Text>
           </View>
         </View>
         
         {/* Footer */}
         <View style={PDFStyles.footer}>
-          <Text>{data.user?.property_name || ""} - Police Report</Text>
-          <Text>This document is system generated and requires official stamp/signature for validation</Text>
+          <Text>{data.user?.property_name || ""} - {data.reportType === 'checkin' ? 'Check-In' : 'Check-Out'} Report</Text>
+          <Text>This is an official document generated by the hotel management system</Text>
         </View>
         
         {/* Page Number */}
@@ -160,4 +158,4 @@ const PoliceReportPDF = ({ data }) => {
   );
 };
 
-export default PoliceReportPDF;
+export default CheckInOutReportPDF;

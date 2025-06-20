@@ -73,6 +73,11 @@ class AuthController extends Controller
                 'company_master.company_code',
                 'property_master.property_name',
                 'property_master.property_code',
+                'property_master.address',
+                'property_master.state',
+                'property_master.country',
+                'property_master.zip_code',
+                'property_master.email',
                 'property_master.city',
                 'property_master.contact_number',
                 'roles_master.role_name'
@@ -137,6 +142,11 @@ class AuthController extends Controller
                 'company_master.company_code',
                 'property_master.property_name',
                 'property_master.property_code',
+                'property_master.address',
+                'property_master.state',
+                'property_master.country',
+                'property_master.zip_code',
+                'property_master.email',
                 'property_master.city',
                 'property_master.contact_number',
                 'roles_master.role_name'

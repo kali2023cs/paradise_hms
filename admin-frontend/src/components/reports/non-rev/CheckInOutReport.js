@@ -1,4 +1,3 @@
-// src/components/reports/PoliceReport.js
 import React, { useState } from 'react';
 import api from '../../../../src/utils/axios';
 import { useAuth } from '../../../utils/AuthContext';
@@ -24,17 +23,17 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import UILoader from '../../common/UILoader';
 import { format, startOfDay, endOfDay } from 'date-fns';
-import PoliceReportPDF from '../non-rev/pdf/PoliceReportPDF';
+import CheckInOutReportPDF from '../non-rev/pdf/CheckInOutReportPDF';
 
 const purposeOptions = [
-  'General Inquiry',
-  'Incident Report',
-  'Theft Report',
-  'Accident Report',
-  'Other Law Enforcement Purpose'
+  'Daily Operations',
+  'Audit Trail',
+  'Guest Activity',
+  'Staff Review',
+  'Management Report'
 ];
 
-const PoliceReport = () => {
+const CheckInOutReport = () => {
   const { user } = useAuth();
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
@@ -58,11 +57,10 @@ const PoliceReport = () => {
     setSuccess(null);
     
     try {
-      // Format dates to start and end of day
       const fromDateStart = startOfDay(new Date(fromDate));
       const toDateEnd = endOfDay(new Date(toDate));
 
-      const response = await api.post('/generate-police-report', {
+      const response = await api.post('/generate-checkinout-report', {
         fromdate: Math.floor(fromDateStart.getTime() / 1000),
         todate: Math.floor(toDateEnd.getTime() / 1000),
         purpose,
@@ -76,7 +74,8 @@ const PoliceReport = () => {
           purpose,
           reportType,
           user,
-          reportData: response.data.records
+          reportData: response.data.records,
+          hotelDetails: response.data.hotelDetails || null
         });
         setSuccess('Report generated successfully');
       } else {
@@ -110,11 +109,12 @@ const PoliceReport = () => {
         textTransform: 'uppercase',
         letterSpacing: 1
       }}>
-        Police Report Generator
+        Check-In/Check-Out Report
       </Typography>
 
       <form onSubmit={handleSubmit}>
         <Grid container spacing={3}>
+          {/* Date Pickers (Same as before) */}
           <Grid item xs={12} md={6}>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
@@ -153,15 +153,16 @@ const PoliceReport = () => {
             </LocalizationProvider>
           </Grid>
 
+          {/* Purpose Dropdown */}
           <Grid item xs={12}>
             <TextField
               select
-              label="Purpose of Report"
+              label="Report Purpose"
               value={purpose}
               onChange={(e) => setPurpose(e.target.value)}
               fullWidth
               required
-              helperText="Select the purpose for this police report"
+              helperText="Select the purpose for this report"
             >
               {purposeOptions.map((option) => (
                 <MenuItem key={option} value={option}>
@@ -171,10 +172,11 @@ const PoliceReport = () => {
             </TextField>
           </Grid>
 
+          {/* Report Type Toggle */}
           <Grid item xs={12}>
             <FormControl component="fieldset" fullWidth>
               <FormLabel component="legend" sx={{ mb: 1, fontWeight: 'bold' }}>
-                Report Type
+                Report Data Type
               </FormLabel>
               <RadioGroup
                 row
@@ -195,23 +197,14 @@ const PoliceReport = () => {
             </FormControl>
           </Grid>
 
+          {/* Action Buttons */}
           <Grid item xs={12}>
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              mt: 2,
-              gap: 2
-            }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, gap: 2 }}>
               <Button
                 type="submit"
                 variant="contained"
                 color="primary"
-                sx={{ 
-                  px: 4, 
-                  py: 1.5, 
-                  fontSize: '1rem',
-                  minWidth: 180
-                }}
+                sx={{ px: 4, py: 1.5, fontSize: '1rem', minWidth: 180 }}
                 disabled={loading}
               >
                 {loading ? 'Generating...' : 'Generate Report'}
@@ -219,19 +212,14 @@ const PoliceReport = () => {
               
               {reportData && (
                 <PDFDownloadLink
-                  document={<PoliceReportPDF data={reportData} />}
-                  fileName={`Police_Report_${format(new Date(), 'yyyyMMdd_HHmmss')}.pdf`}
+                  document={<CheckInOutReportPDF data={reportData} />}
+                  fileName={`CheckInOut_Report_${format(new Date(), 'yyyyMMdd_HHmmss')}.pdf`}
                 >
                   {({ loading }) => (
                     <Button
                       variant="contained"
                       color="success"
-                      sx={{ 
-                        px: 4, 
-                        py: 1.5, 
-                        fontSize: '1rem',
-                        minWidth: 180
-                      }}
+                      sx={{ px: 4, py: 1.5, fontSize: '1rem', minWidth: 180 }}
                       disabled={loading}
                     >
                       {loading ? 'Preparing PDF...' : 'Download PDF'}
@@ -244,30 +232,15 @@ const PoliceReport = () => {
         </Grid>
       </form>
 
-      {/* Alerts */}
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={handleCloseAlert}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseAlert} severity="error" sx={{ width: '100%' }}>
-          {error}
-        </Alert>
+      {/* Alerts (Same as before) */}
+      <Snackbar open={!!error} autoHideDuration={6000} onClose={handleCloseAlert}>
+        <Alert onClose={handleCloseAlert} severity="error">{error}</Alert>
       </Snackbar>
-      
-      <Snackbar
-        open={!!success}
-        autoHideDuration={6000}
-        onClose={handleCloseAlert}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseAlert} severity="success" sx={{ width: '100%' }}>
-          {success}
-        </Alert>
+      <Snackbar open={!!success} autoHideDuration={6000} onClose={handleCloseAlert}>
+        <Alert onClose={handleCloseAlert} severity="success">{success}</Alert>
       </Snackbar>
     </Paper>
   );
 };
 
-export default PoliceReport;
+export default CheckInOutReport;
