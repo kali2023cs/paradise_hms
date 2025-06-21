@@ -27,6 +27,12 @@ import Profile from './components/dashboard/UsersContent';
 import Property from './components/dashboard/PropertyContent';
 import Protected from './components/dashboard/UsersContent';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import OccupancyReport from './components/reports/non-rev/OccupancyReport';
+import HousekeepingStatusReport from './components/reports/non-rev/HousekeepingStatusReport';
+import MaintenanceTrackingReport from './components/reports/non-rev/MaintenanceTrackingReport';
+import RoomBlockingReport from './components/reports/non-rev/RoomBlockingReport';
+import GuestForecastReport from './components/reports/non-rev/GuestForecastReport';
+import GuestMaster from './components/dashboard/master/GuestMaster';
 
 // Nested route component for dashboard
 const DashboardRoutes = ({ mode, setMode, primaryColor, setPrimaryColor }) => {
@@ -103,6 +109,7 @@ function App() {
                 <Route index element={<DashboardContent />} />
                 {/* Room Management */}
                 <Route path="block-master" element={<BlockMaster />} />
+                <Route path="guest-master" element={<GuestMaster />} />
                 <Route path="clean-room" element={<CleanRoom />} />
                 <Route path="maintenance-room" element={<MaintenanceRoom />} />
                 <Route path="checkin-info" element={<CheckinInfo />} />
@@ -116,6 +123,11 @@ function App() {
                 <Route path="checkin-list" element={<CheckinList />} />
                 <Route path="invoices" element={<InvoicesPage />} />
                 <Route path="police-report" element={<PoliceReport />} />
+                <Route path="occupancy-report" element={<OccupancyReport />} />
+                <Route path="housekeeping-report" element={<HousekeepingStatusReport />} />
+                <Route path="maintenance-report" element={<MaintenanceTrackingReport />} />
+                <Route path="roomblock-report" element={<RoomBlockingReport />} />
+                <Route path="guest-forecast-report" element={<GuestForecastReport />} />
                 <Route path="rooms-report" element={<RoomsReport />} />
                 <Route path="checkinoout-report" element={<CheckinOutReport />} />
                 <Route path="invoices/:invoice_number" element={<InvoicesPage />} />

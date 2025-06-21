@@ -12,6 +12,27 @@ class CheckinMaster extends Model
     protected $connection = 'mysql2';
     protected $table = 'checkin_master';
 
+    // Add these properties to automatically cast datetime fields
+    protected $dates = [
+        'check_in_datetime',
+        'check_out_datetime',
+        'created_at',
+        'updated_at',
+    ];
+
+    // Alternatively, you can use $casts for more precise control
+    protected $casts = [
+        'check_in_datetime' => 'datetime',
+        'check_out_datetime' => 'datetime',
+        'is_vip' => 'boolean',
+        'late_checkout' => 'boolean',
+        'allow_credit' => 'boolean',
+        'foreign_guest' => 'boolean',
+        'allow_charges_posting' => 'boolean',
+        'enable_paxwise' => 'boolean',
+        'enable_room_sharing' => 'boolean',
+    ];
+
     protected $fillable = [
         'is_reservation',
         'reservation_number',
@@ -58,5 +79,10 @@ class CheckinMaster extends Model
     public function rooms()
     {
         return $this->hasMany(CheckinRoomTrans::class, 'checkin_id');
+    }
+
+    public function segment()
+    {
+        return $this->belongsTo(Segment::class, 'segment_id');
     }
 }

@@ -29,5 +29,6 @@ class FloorMaster extends Model
     {
         return $this->belongsTo(BlockMaster::class, 'block_id');
     }
+    
 
 }

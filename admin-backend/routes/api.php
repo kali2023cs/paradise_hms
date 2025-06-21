@@ -12,6 +12,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\NonRevenueController;
 use App\Http\Controllers\PropertyController;
 
+
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -24,6 +25,21 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\SetTenantDatabase::class
     Route::post('/addblockmaster', [MasterController::class, 'addblockmaster']);
     Route::put('/blockmaster/{id}', [MasterController::class, 'editblockmaster']);
     Route::delete('/blockmaster/{id}', [MasterController::class, 'deleteBlockMaster']);
+
+    // Route::get('/guestmaster', [MasterController::class, 'guestmaster']);
+    // Route::get('/titlemaster', [MasterController::class, 'titlemaster']);
+    // Route::get('/idmaster', [MasterController::class, 'idmaster']);
+    // Route::post('/addguestmaster', [MasterController::class, 'addguestmaster']);
+    // Route::put('/editguestmaster/{id}', [MasterController::class, 'editguestmaster']);
+    // Route::delete('/guestmaster/{id}', [MasterController::class, 'deleteGuestMaster']);
+
+    Route::get('/guestmaster', [MasterController::class, 'guestmaster']);
+    Route::post('/guestmaster', [MasterController::class, 'addguestmaster']);
+    Route::put('/guestmaster/{guest}', [MasterController::class, 'editguestmaster']);
+    Route::delete('/guestmaster/{guest}', [MasterController::class, 'deleteGuestMaster']);
+    Route::get('/idmaster', [MasterController::class, 'idmaster']);
+    Route::get('/titlemaster', [MasterController::class, 'titlemaster']);
+
 
     Route::get('/getproperty/{id}', [PropertyController::class, 'getPropertyById']);
     Route::put('/updateproperty/{id}', [PropertyController::class, 'updateProperty']);
@@ -71,6 +87,24 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\SetTenantDatabase::class
     Route::post('/generate-police-report', [NonRevenueController::class, 'generatePoliceReport']);
     Route::post('/generate-checkinout-report', [NonRevenueController::class, 'generateCheckInOutReport']);
     Route::post('/generate-rooms-report', [NonRevenueController::class, 'generateRoomsReport']);
+    Route::post('/generate-occupancy-report', [NonRevenueController::class, 'generate']);
+    Route::get('/blocks', [NonRevenueController::class, 'getBlocks']);
+    Route::get('/floors', [NonRevenueController::class, 'getFloors']);
+
+    Route::post('/generate-housekeeping-report', [NonRevenueController::class, 'houseKeepingGenerate']);
+    Route::get('/cleaners', [NonRevenueController::class, 'getCleaner']);
+    Route::get('/cleaning-statuses', [NonRevenueController::class, 'getCleaningStatus']);
+
+    Route::post('/generate-maintenance-report', [NonRevenueController::class, 'maintenaceGenerate']);
+    Route::get('/maintenance-types', [NonRevenueController::class, 'GetMaintenanceMaster']);
+    Route::get('/maintenance-statuses', [NonRevenueController::class, 'getMaintenanceStatusMaster']);
+
+    Route::post('/generate-blocking-report', [NonRevenueController::class, 'blockReportGenerate']);
+    Route::get('/block-reasons', [NonRevenueController::class, 'getBlockReasons']);
+    Route::get('/room-blockers', [NonRevenueController::class, 'getRoomBlockers']);
+
+    Route::post('/generate-guest-forecast', [NonRevenueController::class, 'guestforecastgenerate']);
+    
 
     Route::get('/getAllActiveRooms', [DashboardController::class, 'getAllActiveRooms']);
     Route::get('/getArrivalModes', [CheckinController::class, 'getArrivalModes']);

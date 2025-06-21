@@ -8,6 +8,10 @@ use App\Models\RoomTypeMaster;
 use App\Models\RoomStatusMaster;
 use Illuminate\Http\Request;
 use App\Models\RoomMaster;
+use App\Models\GuestMaster;
+use Illuminate\Support\Facades\Storage;
+use App\Models\TitleMaster;
+use App\Models\IdMaster;
 use Carbon\Carbon;
 use App\Models\Plan;
 
@@ -357,6 +361,242 @@ class MasterController extends Controller
         $room->delete();
 
         return response()->json(['message' => 'Room deleted successfully']);
+    }
+
+    public function guestmaster(Request $request)
+    {
+        $guests = GuestMaster::all()->map(function ($guest) {
+            return [
+                'id' => $guest->id,
+                'title_id' => $guest->title_id,
+                'first_name' => $guest->first_name,
+                'last_name' => $guest->last_name,
+                'gender' => $guest->gender,
+                'date_of_birth' => $guest->date_of_birth,
+                'email' => $guest->email,
+                'phone' => $guest->phone,
+                'mobile' => $guest->mobile,
+                'address' => $guest->address,
+                'city' => $guest->city,
+                'state' => $guest->state,
+                'country' => $guest->country,
+                'postal_code' => $guest->postal_code,
+                'id_type' => $guest->id_type,
+                'id_number' => $guest->id_number,
+                'id_document' => $guest->id_document,
+                'nationality' => $guest->nationality,
+                'company_name' => $guest->company_name,
+                'gst_number' => $guest->gst_number,
+                'is_vip' => $guest->is_vip,
+                'vip_level' => $guest->vip_level,
+                'is_blacklisted' => $guest->is_blacklisted,
+                'created_at' => Carbon::parse($guest->created_at)->format('d-m-Y H:i:s'),
+                'updated_at' => Carbon::parse($guest->updated_at)->format('d-m-Y H:i:s'),
+            ];
+        });
+
+        return response()->json($guests);
+    }
+
+    public function addguestmaster(Request $request)
+    {
+        // Convert string booleans to actual booleans before validation
+        $request->merge([
+            'is_vip' => $this->normalizeBoolean($request->is_vip),
+            'is_blacklisted' => $this->normalizeBoolean($request->is_blacklisted)
+        ]);
+
+        $validated = $request->validate([
+            'title_id' => 'nullable|exists:mysql2.title_master,id',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'gender' => 'nullable|string|in:Male,Female,Other',
+            'date_of_birth' => 'nullable|date_format:Y-m-d',
+            'email' => 'nullable|email|max:255|unique:mysql2.guest_master,email',
+            'phone' => 'nullable|string|max:20',
+            'mobile' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
+            'id_type' => 'nullable|exists:mysql2.id_master,id',
+            'id_number' => 'nullable|string|max:255',
+            'id_document' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'nationality' => 'nullable|string|max:255',
+            'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'company_name' => 'nullable|string|max:255',
+            'company_address' => 'nullable|string',
+            'gst_number' => 'nullable|string|max:50',
+            'gst_type' => 'nullable|string|max:50',
+            'is_vip' => 'nullable|boolean',
+            'vip_level' => 'nullable|string|max:50',
+            'remarks' => 'nullable|string',
+            'is_blacklisted' => 'nullable|boolean',
+            'blacklist_reason' => 'nullable|string',
+        ]);
+
+        $data = $validated;
+        
+        // Handle file uploads
+        if ($request->hasFile('id_document')) {
+            $data['id_document'] = $request->file('id_document')->store('id_documents', 'public');
+        }
+        
+        if ($request->hasFile('profile_photo')) {
+            $data['profile_photo'] = $request->file('profile_photo')->store('profile_photos', 'public');
+        }
+        
+        $guest = GuestMaster::create([
+            ...$data,
+            'created_by' => $request->user()->id,
+            'updated_by' => $request->user()->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Guest added successfully',
+            'data' => $guest
+        ], 201);
+    }
+
+    public function editguestmaster(Request $request, $id)
+    {
+        $guest = GuestMaster::find($id);
+
+        if (!$guest) {
+            return response()->json(['message' => 'Guest not found'], 404);
+        }
+
+        // Convert string booleans to actual booleans before validation
+        $request->merge([
+            'is_vip' => $this->normalizeBoolean($request->is_vip, $guest->is_vip),
+            'is_blacklisted' => $this->normalizeBoolean($request->is_blacklisted, $guest->is_blacklisted)
+        ]);
+
+        $validated = $request->validate([
+            'title_id' => 'nullable|exists:title_master,id',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'gender' => 'nullable|string|in:Male,Female,Other',
+            'date_of_birth' => 'nullable|date_format:Y-m-d',
+            'email' => 'nullable|email|max:255|unique:guest_master,email,'.$guest->id,
+            'phone' => 'nullable|string|max:20',
+            'mobile' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
+            'id_type' => 'nullable|exists:id_master,id',
+            'id_number' => 'nullable|string|max:255',
+            'id_document' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'nationality' => 'nullable|string|max:255',
+            'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'company_name' => 'nullable|string|max:255',
+            'company_address' => 'nullable|string',
+            'gst_number' => 'nullable|string|max:50',
+            'gst_type' => 'nullable|string|max:50',
+            'is_vip' => 'nullable|boolean',
+            'vip_level' => 'nullable|string|max:50',
+            'remarks' => 'nullable|string',
+            'is_blacklisted' => 'nullable|boolean',
+            'blacklist_reason' => 'nullable|string',
+        ]);
+
+        $data = $validated;
+        
+        // Handle file uploads
+        if ($request->hasFile('id_document')) {
+            // Delete old file if exists
+            if ($guest->id_document) {
+                Storage::disk('public')->delete($guest->id_document);
+            }
+            $data['id_document'] = $request->file('id_document')->store('id_documents', 'public');
+        }
+        
+        if ($request->hasFile('profile_photo')) {
+            // Delete old file if exists
+            if ($guest->profile_photo) {
+                Storage::disk('public')->delete($guest->profile_photo);
+            }
+            $data['profile_photo'] = $request->file('profile_photo')->store('profile_photos', 'public');
+        }
+
+        $guest->update([
+            ...$data,
+            'updated_by' => $request->user()->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Guest updated successfully',
+            'data' => $guest
+        ]);
+    }
+
+    public function deleteGuestMaster($id)
+    {
+        $guest = GuestMaster::find($id);
+        if (!$guest) {
+            return response()->json(['message' => 'Guest not found'], 404);
+        }
+
+        // Delete associated files
+        if ($guest->id_document) {
+            Storage::disk('public')->delete($guest->id_document);
+        }
+        if ($guest->profile_photo) {
+            Storage::disk('public')->delete($guest->profile_photo);
+        }
+
+        $guest->delete();
+        return response()->json(['message' => 'Guest deleted successfully']);
+    }
+
+    public function titlemaster(Request $request)
+    {
+        $titles = TitleMaster::all()->map(function ($title) {
+            return [
+                'id' => $title->id,
+                'title_name' => $title->title_name,
+            ];
+        });
+
+        return response()->json($titles);
+    }
+
+    public function idmaster(Request $request)
+    {
+        $idTypes = IdMaster::active()->get()->map(function ($idType) {
+            return [
+                'id' => $idType->id,
+                'id_type' => $idType->id_type,
+                'description' => $idType->description,
+            ];
+        });
+
+        return response()->json($idTypes);
+    }
+
+    private function normalizeBoolean($value, $default = false)
+    {
+        if (is_null($value)) {
+            return $default;
+        }
+        
+        if (is_bool($value)) {
+            return $value;
+        }
+        
+        if (is_int($value)) {
+            return (bool)$value;
+        }
+        
+        if (is_string($value)) {
+            $value = strtolower($value);
+            return in_array($value, ['true', '1', 'yes', 'on']);
+        }
+        
+        return $default;
     }
 
 

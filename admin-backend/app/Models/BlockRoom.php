@@ -36,4 +36,13 @@ class BlockRoom extends Model
     {
         return $this->belongsTo(User::class, 'blocked_by');
     }
+    public function blockedByUser()
+    {
+        return $this->belongsTo(User::class, 'blocked_by');
+    }
+
+    public function room()
+    {
+        return $this->belongsTo(RoomMaster::class);
+    }
 }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 20, 2025 at 03:17 PM
+-- Generation Time: Jun 21, 2025 at 01:28 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -108,19 +108,7 @@ CREATE TABLE `block_rooms` (
 --
 
 INSERT INTO `block_rooms` (`id`, `room_id`, `status_id`, `reason`, `fromdatetime`, `todatetime`, `blocked_by`, `timestamp`) VALUES
-(1, 1, 4, 'Tesing', '2025-06-11 18:30:00', '2025-06-12 18:30:00', 1, '2025-06-12 13:02:24'),
-(2, 3, 7, 'testing', '2025-06-11 18:30:00', '2025-06-12 18:30:00', 1, '2025-06-12 13:05:15'),
-(3, 5, 4, 'testing', '2025-06-12 18:30:00', '2025-06-13 18:30:00', 1, '2025-06-12 13:08:31'),
-(4, 6, 7, 'testing', '2025-06-12 18:30:00', '2025-06-13 18:30:00', 1, '2025-06-12 13:09:24'),
-(5, 7, 7, 'Tesing', '2025-06-12 18:30:00', '2025-06-18 18:30:00', 1, '2025-06-12 13:11:18'),
-(6, 9, 7, 'Tesing', '2025-06-19 18:30:00', '2025-06-18 18:30:00', 1, '2025-06-12 13:14:01'),
-(7, 10, 7, 'testing', '2025-06-11 18:30:00', '2025-06-13 18:30:00', 1, '2025-06-12 13:15:31'),
-(8, 11, 7, 'Tesing', '2025-06-11 18:30:00', '2025-06-12 18:30:00', 1, '2025-06-12 13:17:52'),
-(9, 14, 4, '1500.00', '2025-06-13 18:30:00', '2025-06-29 18:30:00', 1, '2025-06-14 11:33:19'),
-(10, 18, 7, 'None', '2025-06-16 18:30:00', '2025-06-24 18:30:00', 1, '2025-06-17 06:26:14'),
-(11, 6, 4, '1ddsddsdd', '2025-06-19 18:30:00', '2025-06-23 18:30:00', 1, '2025-06-20 07:15:43'),
-(12, 9, 4, 'No Reason...Just Tesing', '2025-06-18 18:30:00', '2025-06-24 18:30:00', 1, '2025-06-20 09:23:51'),
-(13, 10, 7, 'Testing', '2025-06-19 18:30:00', '2025-06-29 18:30:00', 1, '2025-06-20 09:26:03');
+(1, 2, 4, 'Testing', '2025-06-20 18:30:00', '2025-06-29 18:30:00', 1, '2025-06-21 07:44:33');
 
 -- --------------------------------------------------------
 
@@ -478,7 +466,7 @@ INSERT INTO `floor_master` (`id`, `floor_no`, `floor_name`, `block_id`, `created
 (3, 'F-201', 'Third Floor', 2, 2, 2, NULL, '2025-06-06 11:50:37', '2025-06-07 05:34:15', '2025-06-07 05:34:15'),
 (4, 'F-301', 'Fourth Floor', 4, 2, 2, NULL, '2025-06-06 06:33:16', '2025-06-07 05:34:15', '2025-06-07 05:34:15'),
 (5, 'F-101', 'First Floor', 5, 1, 1, NULL, '2025-06-07 05:40:32', '2025-06-07 05:40:32', NULL),
-(6, 'F-201', 'Second Floor', 5, 1, 1, NULL, '2025-06-07 05:41:05', '2025-06-07 05:41:05', NULL);
+(6, 'F-201', 'Second Floor', 6, 1, 1, NULL, '2025-06-07 05:41:05', '2025-06-21 00:29:41', NULL);
 
 -- --------------------------------------------------------
 
@@ -508,6 +496,82 @@ INSERT INTO `gender_master` (`id`, `gender_code`, `gender_name`, `is_active`, `c
 (2, 'F', 'Female', 1, 1, 1, NULL, '2025-06-09 10:35:23', '2025-06-09 10:35:23', NULL),
 (3, 'O', 'Other', 1, 1, 1, NULL, '2025-06-09 10:35:23', '2025-06-09 10:35:23', NULL),
 (4, 'U', 'Unspecified', 1, 1, 1, NULL, '2025-06-09 10:35:23', '2025-06-09 10:35:23', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `guest_master`
+--
+
+CREATE TABLE `guest_master` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `title_id` int(20) DEFAULT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `gender` enum('Male','Female','Other') DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `mobile` varchar(20) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `state` varchar(100) DEFAULT NULL,
+  `country` varchar(100) DEFAULT NULL,
+  `postal_code` varchar(20) DEFAULT NULL,
+  `id_type` varchar(50) DEFAULT NULL,
+  `id_number` varchar(100) DEFAULT NULL,
+  `id_document` varchar(255) DEFAULT NULL COMMENT 'Path to uploaded document',
+  `nationality` varchar(100) DEFAULT NULL,
+  `profile_photo` varchar(255) DEFAULT NULL,
+  `company_name` varchar(100) DEFAULT NULL,
+  `company_address` text DEFAULT NULL,
+  `gst_number` varchar(50) DEFAULT NULL,
+  `gst_type` varchar(50) DEFAULT NULL,
+  `is_vip` tinyint(1) DEFAULT 0,
+  `vip_level` varchar(50) DEFAULT NULL,
+  `preferences` text DEFAULT NULL COMMENT 'JSON field for guest preferences',
+  `remarks` text DEFAULT NULL,
+  `blacklist_reason` text DEFAULT NULL,
+  `is_blacklisted` tinyint(1) DEFAULT 0,
+  `created_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `updated_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `guest_master`
+--
+
+INSERT INTO `guest_master` (`id`, `title_id`, `first_name`, `last_name`, `gender`, `date_of_birth`, `email`, `phone`, `mobile`, `address`, `city`, `state`, `country`, `postal_code`, `id_type`, `id_number`, `id_document`, `nationality`, `profile_photo`, `company_name`, `company_address`, `gst_number`, `gst_type`, `is_vip`, `vip_level`, `preferences`, `remarks`, `blacklist_reason`, `is_blacklisted`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1, 1, 'Kalidass', 'R', 'Male', '2003-05-20', 'kalidass@gmail.com', '9090909090', '1234567', 'Anna nagar', 'chennai', 'Tamil Nadu', 'India', '600040', '4', 'WERT456BS', 'id_documents/MthV2S8inYKzje3MjBzawp1Rh35qq21U9JzjD52t.png', 'Indian', 'profile_photos/TaTB7X1ripczwp1kqHoSBOgxY7FFDP1vsbL0ELSN.png', 'Goio Tech', 'Ramanathapuram', 'qwert456789hj', 'qwqw', 1, '1', NULL, 'QWER234567d', NULL, 0, 1, 1, '2025-06-21 05:08:48', '2025-06-21 05:40:53', NULL),
+(2, 1, 'Kalidass', 'R', 'Male', '2003-06-20', 'dass@gmail.com', '9090909090', '1234567', 'Anna nagar', 'chennai', 'Tamil Nadu', 'India', '600040', '4', 'WERT456BS', 'id_documents/dtr0DUbjTosogdjtMG2c0L9nM34cV8pyN8irYB3d.pdf', 'Indian', NULL, 'Goio Tech', 'Ann nagar', 'qwert456789hj', 'qwqw', 1, NULL, NULL, 'qwertyuio', NULL, 0, 1, 1, '2025-06-21 05:54:07', '2025-06-21 05:54:07', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `id_master`
+--
+
+CREATE TABLE `id_master` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `id_type` varchar(50) NOT NULL COMMENT 'Type of identification document',
+  `description` varchar(100) DEFAULT NULL COMMENT 'Brief description',
+  `is_active` tinyint(1) DEFAULT 1 COMMENT 'Whether this ID type is accepted',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `id_master`
+--
+
+INSERT INTO `id_master` (`id`, `id_type`, `description`, `is_active`, `created_at`) VALUES
+(1, 'Passport', 'International travel document', 1, '2025-06-21 09:39:03'),
+(2, 'Driver License', 'Government issued driving permit', 1, '2025-06-21 09:39:03'),
+(3, 'National ID', 'Country identification card', 1, '2025-06-21 09:39:03'),
+(4, 'PAN Card', 'Indian tax identification', 1, '2025-06-21 09:39:03'),
+(5, 'Aadhaar', 'Indian biometric ID', 1, '2025-06-21 09:39:03');
 
 -- --------------------------------------------------------
 
@@ -896,7 +960,9 @@ CREATE TABLE `room_cleaning_logs` (
 --
 
 INSERT INTO `room_cleaning_logs` (`id`, `room_id`, `cleaner_id`, `status_id`, `remarks`, `started_at`, `completed_at`, `created_at`, `updated_at`) VALUES
-(1, 5, 1, 3, 'asasasas', '2025-06-20 03:50:28', '2025-06-20 03:53:13', '2025-06-20 03:50:28', '2025-06-20 03:53:13');
+(1, 5, 1, 3, 'asasasas', '2025-06-20 03:50:28', '2025-06-20 03:53:13', '2025-06-20 03:50:28', '2025-06-20 03:53:13'),
+(2, 9, 2, 2, 'Cleaning', '2025-06-21 00:57:26', NULL, '2025-06-21 00:57:26', '2025-06-21 00:57:26'),
+(3, 5, 2, 1, 'jhdhgqhwjwjqw wduqej wjbhiuiewqkjnd sggus s  sjudwq djqdsuhiuc3 eeon xkj3 eheiuhqdn', '2025-06-21 00:59:42', NULL, '2025-06-21 00:59:42', '2025-06-21 00:59:42');
 
 -- --------------------------------------------------------
 
@@ -924,7 +990,8 @@ CREATE TABLE `room_maintenance_logs` (
 
 INSERT INTO `room_maintenance_logs` (`id`, `room_id`, `maintenance_type_id`, `maintenance_status_id`, `issue_description`, `reported_by`, `started_at`, `resolved_at`, `remarks`, `created_at`, `updated_at`) VALUES
 (1, 5, 2, 4, 'Finished', 1, '2025-06-20 03:54:41', '2025-06-20 03:55:06', NULL, '2025-06-20 03:54:41', '2025-06-20 03:55:06'),
-(2, 3, 1, 2, 'Tesing', 1, '2025-06-20 03:58:32', NULL, NULL, '2025-06-20 03:58:32', '2025-06-20 03:58:32');
+(2, 3, 1, 4, 'Resolved', 1, '2025-06-20 03:58:32', '2025-06-21 01:27:08', NULL, '2025-06-20 03:58:32', '2025-06-21 01:27:08'),
+(3, 14, 5, 2, 'asdfghjkqwertyuio qwertyuisdfghj kxcvnm ,dfghjkl', 2, '2025-06-21 01:21:26', NULL, NULL, '2025-06-21 01:21:26', '2025-06-21 01:21:26');
 
 -- --------------------------------------------------------
 
@@ -957,19 +1024,19 @@ CREATE TABLE `room_master` (
 
 INSERT INTO `room_master` (`id`, `room_no`, `display_order`, `floor_id`, `room_type_id`, `max_pax`, `max_extra_pax`, `status_id`, `checkin_id`, `is_active`, `created_by`, `updated_by`, `deleted_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1, '501', 1, 5, 3, 2, 1, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 09:09:11', NULL),
-(2, '502', 2, 5, 4, 2, 1, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 06:29:26', NULL),
-(3, '503', 3, 5, 5, 3, 2, 5, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 03:58:32', NULL),
+(2, '502', 2, 5, 4, 2, 1, 4, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-21 02:15:17', NULL),
+(3, '503', 3, 5, 5, 3, 2, 4, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-21 01:27:08', NULL),
 (4, '504', 4, 5, 6, 3, 2, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 06:29:26', NULL),
-(5, '505', 5, 5, 3, 2, 1, 4, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 03:55:06', NULL),
+(5, '505', 5, 5, 3, 2, 1, 3, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-21 00:59:42', NULL),
 (6, '506', 6, 5, 4, 2, 1, 2, 1, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 03:39:55', NULL),
 (7, '507', 7, 5, 5, 3, 2, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 06:29:26', NULL),
 (8, '508', 8, 5, 6, 3, 2, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-14 09:58:56', NULL),
-(9, '509', 9, 5, 3, 2, 1, 4, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 03:54:07', NULL),
-(10, '510', 10, 5, 4, 2, 1, 7, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 03:56:03', NULL),
+(9, '509', 9, 5, 3, 2, 1, 3, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-21 00:57:26', NULL),
+(10, '510', 10, 5, 4, 2, 1, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-21 07:43:05', NULL),
 (11, '601', 11, 6, 5, 3, 2, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-14 09:58:56', NULL),
 (12, '602', 12, 6, 6, 3, 2, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-17 07:04:12', NULL),
 (13, '603', 13, 6, 3, 2, 1, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-17 07:04:12', NULL),
-(14, '604', 14, 6, 4, 2, 1, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 07:49:09', NULL),
+(14, '604', 14, 6, 4, 2, 1, 5, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-21 01:21:26', NULL),
 (15, '605', 15, 6, 5, 3, 2, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 07:49:12', NULL),
 (16, '606', 16, 6, 6, 3, 2, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 07:49:15', NULL),
 (17, '607', 17, 6, 3, 2, 1, 1, NULL, 1, 101, 101, NULL, '2025-06-07 11:23:53', '2025-06-20 07:49:17', NULL),
@@ -1211,6 +1278,19 @@ ALTER TABLE `gender_master`
   ADD UNIQUE KEY `gender_code` (`gender_code`);
 
 --
+-- Indexes for table `guest_master`
+--
+ALTER TABLE `guest_master`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `guest_master_email_unique` (`email`);
+
+--
+-- Indexes for table `id_master`
+--
+ALTER TABLE `id_master`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `invoices`
 --
 ALTER TABLE `invoices`
@@ -1367,7 +1447,7 @@ ALTER TABLE `block_master`
 -- AUTO_INCREMENT for table `block_rooms`
 --
 ALTER TABLE `block_rooms`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `business_source`
@@ -1442,6 +1522,18 @@ ALTER TABLE `gender_master`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT for table `guest_master`
+--
+ALTER TABLE `guest_master`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `id_master`
+--
+ALTER TABLE `id_master`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT for table `invoices`
 --
 ALTER TABLE `invoices`
@@ -1511,13 +1603,13 @@ ALTER TABLE `roomtype_master`
 -- AUTO_INCREMENT for table `room_cleaning_logs`
 --
 ALTER TABLE `room_cleaning_logs`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `room_maintenance_logs`
 --
 ALTER TABLE `room_maintenance_logs`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `room_master`
